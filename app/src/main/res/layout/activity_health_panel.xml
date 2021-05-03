@@ -6,22 +6,204 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".health_panel"
-
     >
-    <com.bluetooth.bth_k2.GraphView
-        android:id="@+id/graph_view_BCG"
+    <Button
+        android:id="@+id/bt_changeuser"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="切換使用者"
+        android:onClick="clickchangeuser"
+
+
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.98"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.05"
+
+        />
+
+<TextView
+    android:id="@+id/tv_time"
+    android:layout_width="match_parent"
+    android:layout_height="50dp"
+    android:gravity="center"
+    android:text = "time"
+    android:textSize="24dp"
+
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintLeft_toLeftOf="parent"
+    app:layout_constraintRight_toRightOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent"
+    app:layout_constraintVertical_bias="0.01"
+
+
+    />
+
+
+<LinearLayout
+
+    android:layout_marginTop="50dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="left"
+
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintLeft_toLeftOf="parent"
+    app:layout_constraintRight_toRightOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent"
+    app:layout_constraintVertical_bias="0"
+    >
+
+    <LinearLayout
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+
+        android:layout_width="100dp"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        >
+
+        <ImageView
+            android:id="@+id/iv_fatigue1"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_margin="8dp"
+            app:srcCompat="@drawable/fatigue1" />
+
+        <ImageView
+            android:id="@+id/iv_fatigue2"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_margin="8dp"
+            app:srcCompat="@drawable/fatigue1" />
+
+        <ImageView
+            android:id="@+id/iv_fatigue3"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_margin="8dp"
+            app:srcCompat="@drawable/fatigue2"
+
+            />
+
+        <ImageView
+            android:id="@+id/iv_fatigue4"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_margin="8dp"
+            app:srcCompat="@drawable/fatigue2"
+
+            />
+    </LinearLayout>
+
+    <TextView
+        android:id = "@+id/tv_heartrate"
         android:layout_width="match_parent"
-        android:layout_height="191dp"
-        android:layout_margin="8dp"
+        android:layout_height="match_parent"
+        android:textColor="@color/purple_500"
+        android:text = "69"
+        android:textSize="200dp"
+        android:paddingLeft="10dp"
+    />
+</LinearLayout>
+    <LinearLayout
+
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.92" />
+        app:layout_constraintVertical_bias="0.45"
+        >
+
+    <TextView
+        android:id = "@+id/tv_viberate"
+        android:layout_width="80dp"
+        android:layout_height="50dp"
+        android:textSize="20dp"
+        android:gravity="center"
+        android:text = "震動"
+        />
+    <ImageButton
+        android:id = "@+id/ib_showvib"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="clickvib"
+        android:background="@android:color/transparent"
+        app:srcCompat="@drawable/vib_off"
+        />
+
+        <SeekBar
+            android:id = "@+id/sb_viber"
+            android:layout_width="match_parent"
+            android:layout_height="50dp" />
+    </LinearLayout>
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="50dp"
+    android:gravity="center"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintLeft_toLeftOf="parent"
+    app:layout_constraintRight_toRightOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent"
+    app:layout_constraintVertical_bias="0.55"
+    >
+    <Button
+        android:id = "@+id/bt_waveform"
+        android:layout_width="120dp"
+        android:layout_height="50dp"
+        android:text = "原始波型"
+        android:onClick="clickwaveform"
+
+    />
+    <Button
+        android:id = "@+id/bt_autoup"
+        android:layout_width="120dp"
+        android:layout_height="50dp"
+        android:text = "開啟數據上傳"
+        android:onClick="clickautoup"
+        />
+    <Button
+        android:layout_width="120dp"
+        android:layout_height="50dp"
+        android:text = "波型設定"
+        android:onClick="clickwaveset"
+        />
+
+</LinearLayout>
 
 
+    <com.bluetooth.bth_k2.GraphView
+        android:id="@+id/graph_view_BCG"
+        android:layout_width="match_parent"
+        android:layout_height="312dp"
+        android:layout_margin="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.875" />
 
     <ImageButton
         android:id="@+id/IB_bluetooth"
@@ -29,7 +211,6 @@
         android:layout_height="80dp"
         android:background="@android:color/transparent"
         android:onClick="clickble"
-
 
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -44,5 +225,42 @@
 
         />
 
+    <Button
+        android:id="@+id/button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Back"
+        android:onClick="clickback"
+
+
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.05"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.98"
+
+        />
+
+
+    <Button
+        android:id="@+id/bt_startdatacollect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="收集資料"
+        android:onClick="clickdata"
+
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.7"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.98"
+
+        />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

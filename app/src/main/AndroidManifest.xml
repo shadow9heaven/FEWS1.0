@@ -20,7 +20,6 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.     CHANGE_CONFIGURATION" />
 
-
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -28,21 +27,25 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Drive_status_cntl">
+        <activity android:name=".changeuser"
+            android:screenOrientation="portrait"
 
+            ></activity>
+        <activity android:name=".ecg_collect" />
+        <activity
+            android:name=".upload_data"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".bluetooth"
-            android:theme="@style/Theme.AppCompat.NoActionBar"
-            android:screenOrientation="portrait"
-            ></activity>
+            android:screenOrientation="portrait" />
         <activity
             android:name=".health_panel"
-            android:theme="@style/Theme.AppCompat.NoActionBar"
             android:screenOrientation="portrait"
-            />
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar" />
         <activity
             android:name=".MainActivity"
-            android:theme="@style/Theme.AppCompat.NoActionBar"
             android:screenOrientation="portrait"
+
             >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -37,18 +37,7 @@ import java.net.URL
 import java.util.*
 import at.favre.lib.crypto.bcrypt.BCrypt
 
-class health_panel : AppCompatActivity() {
-
-    val BCG_SIZE = 1280
-    val ECG_SIZE = 2560
-
-    lateinit var ib_vib :ImageButton
-
-    var vibmode = false
-    var viblevel = 0
-
-
-    val UPLOAD_TIME = 300
+class ecg_collect : AppCompatActivity() {
 
     lateinit var bt_autoup :Button
     var autoup = false
@@ -57,26 +46,27 @@ class health_panel : AppCompatActivity() {
     lateinit var tv_time :TextView
     var device_add = ""
 
-
     lateinit var device :BluetoothDevice
 
     var GV: GraphView? = null
 
     lateinit var bt_waveform :Button
 
-    var BCG_pc : Int =0
-    var BCG_th: Int = 320
-    var BCG_pp : List<DataPoint> = ArrayList()
+    var ECG_pc : Int =0
+    var ECG_th: Int = 1280
+
+    var ECG_pp : List<DataPoint> = ArrayList()
     var hr_gv : List<DataPoint> = ArrayList()
     var re_gv : List<DataPoint> = ArrayList()
 
-    var draw_count = 1
-    var draw_mode  = 0
 
-    var wavemode   = 0
+    var draw_count =1
+    var draw_mode =0
 
-    var paklost    = true
-    var conncount  = 0
+    var wavemode = 0
+
+    var paklost = true
+    var conncount =0
     var reconn = 0
     val RECON_DURA = 3
 
@@ -90,13 +80,11 @@ class health_panel : AppCompatActivity() {
     lateinit var write_thread :Thread
 
     lateinit var sp_fatigue : SoundPool
-    var dataclt = false
+
 
     var mgatt: BluetoothGatt? = null
 
-    var ECG_DATA_DIRECTORY = "ECG_DATA"
-    var user = "guest"
-
+    private val ECG_DATA_DIRECTORY = "ECG_DATA"
     val ACTION_GATT_DISCONNECTED = "com.example.bluetooth.le.ACTION_GATT_DISCONNECTED"
     val url = "http://59.120.189.128:5000/data/biologueData"
 
@@ -105,6 +93,7 @@ class health_panel : AppCompatActivity() {
     private lateinit var bluetoothAdapter : BluetoothAdapter
 
     var hrlist  = arrayListOf<Int>()
+
     var ecgdatalog = arrayListOf<String>()
     var bcgdatalog = arrayListOf<String>()
 
@@ -126,15 +115,18 @@ class health_panel : AppCompatActivity() {
 
     private lateinit var DefaultFileName: String
     private lateinit var DefaultBCGName: String
-
     var FinalECGname : String = ""
     var FinalBCGname : String = ""
+    lateinit var extFile : File
+    lateinit var bcgFile : File
+
 
     var hrhandle = Handler()
     private val timerRunnable2: Runnable = object : Runnable {
         override fun run() {
             runOnUiThread {
-                if(blecnt && dataclt){
+                if(blecnt){
+
                     if (!hrlist.isEmpty()) {
                         var finalhr = hrlist.average()
 
@@ -154,9 +146,10 @@ class health_panel : AppCompatActivity() {
 
                     }
 
+
                     when(wavemode){
                         0->{
-                            var ori_gv = BCG_pp.reversed()
+                            var ori_gv = ECG_pp.reversed()
                             GV?.setData(ori_gv)
                         }///////origin wave
                         1-> {
@@ -170,18 +163,17 @@ class health_panel : AppCompatActivity() {
 
                     if(paklost) {
                         if (conncount < 5) {
-                            Toast.makeText(this@health_panel, conncount.toString() + "packet loss!!", Toast.LENGTH_LONG).show()
+                            Toast.makeText(this@ecg_collect, conncount.toString() + "packet loss!!", Toast.LENGTH_LONG).show()
 
                             conncount++
                         } else {
+
+                            Toast.makeText(this@ecg_collect, reconn.toString() + "connection retry!!", Toast.LENGTH_LONG).show()
 
                             //var reconn = 0
                             //val RECON_DURA
 
                             if(reconn < RECON_DURA && !recbool){
-
-                                Toast.makeText(this@health_panel, reconn.toString() + "connection retry!!", Toast.LENGTH_LONG).show()
-
                                 recbool = true
                                 Thread {
                                     try {
@@ -189,12 +181,12 @@ class health_panel : AppCompatActivity() {
                                         reconn++
                                         device = bluetoothManager.getConnectedDevices(BluetoothProfile.GATT)[0]
                                         //if(device == null){}
-                                        mgatt = device.connectGatt(this@health_panel, false, gattCB)
+                                        mgatt = device.connectGatt(this@ecg_collect, false, gattCB)
                                         Thread.sleep(1000)
                                         //send_start()
-                                        if(bluetoothManager.getConnectionState(device, GATT) == 1 ||
-                                            bluetoothManager.getConnectionState(device, GATT) == 2){
-                                            Toast.makeText(this@health_panel, "connection rebuild!!", Toast.LENGTH_LONG).show()
+                                        if(bluetoothManager.getConnectionState(device, GATT) == 0 ||
+                                                bluetoothManager.getConnectionState(device, GATT) == 3){
+                                            Toast.makeText(this@ecg_collect, "connection rebuild!!", Toast.LENGTH_LONG).show()
                                             conncount = 0
                                             reconn = 0
                                         }////connection build
@@ -207,11 +199,12 @@ class health_panel : AppCompatActivity() {
                                 }.start()
 
                             }////trying to reconnect
-                            else if(reconn > RECON_DURA-1 && !recbool) {
+                            else if(reconn == RECON_DURA && !recbool) {
 
-                                Toast.makeText(this@health_panel, "disconnected!!", Toast.LENGTH_LONG).show()
+                                Toast.makeText(this@ecg_collect, "disconnected!!", Toast.LENGTH_LONG).show()
                                 mgatt?.disconnect()
                                 broadcastUpdate(ACTION_GATT_DISCONNECTED)
+
 
                                 blecnt = false
                                 bt_bluetooth.setImageResource(R.drawable.bt_off)
@@ -221,91 +214,29 @@ class health_panel : AppCompatActivity() {
                                 conncount = 0
                             }
                             else{}
+
+
                         }
                     }////packlost
                     else{
+
                         if(conncount != 0) conncount = 0
                         paklost = true
                     }////packlost
 
-                    if(uploadcount < UPLOAD_TIME){
+                    if(uploadcount <1800){
                         uploadcount ++
                     }
                     else if(autoup){
 /////////////////upload data to database
-                        Thread{
-                        var upload_ECG = File(storagePath, "$ECG_DATA_DIRECTORY/$DefaultFileName")
-                        var upload_BCG = File(storagePath, "$ECG_DATA_DIRECTORY/$DefaultBCGName")
+                        jsonObject = JSONObject()
+                        jsonObject.put("post_t", 3)
 
-                        write_new_file()
-                        ////////unparse
-
-                        var bcgcount =0
-                        var bcgbuffer = arrayListOf<Int>()
-                        var bcg_timestampST =0
-                        var bcg_timestampEND =0
-
-                        var ecgcount =0
-                        var ecgbuffer = arrayListOf<Int>()
-                        var ecg_timestampST =0
-                        var ecg_timestampEND =0
+                        //fetchJSON()
 
 
-                        upload_BCG.forEachLine {
-                            var tmp = it.split(" ")
-                                when(tmp[0]){
-                                    "app_version:"->{}
-                                    "Start_Time:"->{}
-                                    else->{
-                                        if(bcgcount==0){
-                                            bcg_timestampST = tmp[0].toInt()
-                                        }
-                                        else if (bcgcount == BCG_SIZE){
-                                            bcg_timestampEND = tmp[0].toInt()
-                                        }
-                                        bcgbuffer.add(tmp[1].toInt())
-                                        if(bcgcount == BCG_SIZE){
-                                                jsonObject = JSONObject()
-                                                jsonObject.put("post_t", 3)
-                                                jsonObject.put("bcg",bcgbuffer)
-                                                jsonObject.put("acc",1)
-                                                jsonObject.put("device_t",device_add)
-                                                jsonObject.put("BCGID",1)
-                                                jsonObject.put("data_len",BCG_SIZE)
-                                                //jsonObject.put("id")
-                                                jsonObject.put("timestampST",bcg_timestampST)
-                                                jsonObject.put("timestampEND",bcg_timestampEND)
-
-                                                fetchJSON()
-
-                                                bcgbuffer.clear()
-                                                bcgcount = 0
-                                                bcg_timestampST = 0
-                                                bcg_timestampEND =0
-                                        }////upload the packet
-                                        else bcgcount++
-                                    }
-                                }
-                            }
-
-                        upload_ECG.forEachLine {
-                            var tmp = it.split(" ")
-                            when(tmp[0]){
-                                "app_version:"->{}
-                                "Start_Time:"->{}
-                                else->{
-                                    if(ecgcount == 0) {
-                                        ecg_timestampST = tmp[0].toInt()
-                                    }
-                                    else if(ecgcount == ECG_SIZE){
-                                        ecg_timestampEND = tmp[1].toInt()
-                                    }
-                                }
-                            }
-                        }
-                        ///////unparse
 /////////////////upload data to database
-                        }.start()
+
                         uploadcount =0
                     }//////upload
                     else{
@@ -333,33 +264,13 @@ class health_panel : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_health_panel)
+        setContentView(R.layout.activity_ecg_collect)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        try{
-            user  = intent?.getStringExtra("user")!!
-            //ECG_DATA_DIRECTORY = user
-
-        }
-        catch (e :Exception){
-
-        }
-        val intent = Intent(this, bluetooth::class.java)
-        startActivityForResult(intent, 1)
-
-        ib_vib = findViewById(R.id.ib_showvib)
 
         hrhandle?.postDelayed(timerRunnable2, 0)
 
-        bt_bluetooth = findViewById(R.id.IB_bluetooth)
-        bt_waveform  = findViewById(R.id.bt_waveform)
-        bt_autoup    = findViewById(R.id.bt_autoup)
-
-
-        tv_heartrate = findViewById(R.id.tv_heartrate)
-        tv_time      = findViewById(R.id.tv_time)
-
-        GV           = findViewById(R.id.graph_view_BCG)
+        tv_time = findViewById(R.id.tv_ecgtime)
 
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -378,10 +289,8 @@ class health_panel : AppCompatActivity() {
 
     }
     fun create_saving_directory() {
-
         var dataDir = File(storagePath, ECG_DATA_DIRECTORY)
         if(dataDir.mkdirs())Log.e("mkdir", dataDir.toString())
-
     }
 
 
@@ -491,7 +400,6 @@ class health_panel : AppCompatActivity() {
             var ecgData = characteristic!!.value
             //downsample = (downsample+1 ) % 4
             if (characteristic.uuid == UUID.fromString(UUID_CHAR_ECG)){
-                var extFile = File(storagePath, "$ECG_DATA_DIRECTORY/$DefaultFileName")
                 //downsample = (downsample+1 ) % 3
                 var outdata = LongArray(65)
 
@@ -501,13 +409,12 @@ class health_panel : AppCompatActivity() {
                         or (ecgData.get(3).toLong() and 0xFFL shl 24)
                         )
                 )////////timestamp
-/*
+
                 if(ECG_pc == ECG_th){
 
                     ECG_pp = ECG_pp.drop(64)
                     ECG_pc -= 64
                 }
-*/
 
                 for (i in 0..63) {
                     //Log.e("ii for", i.toString())
@@ -517,14 +424,12 @@ class health_panel : AppCompatActivity() {
 
                     var tmp1 = ( ecgData.get(nIndex).toLong() and 0xFFL ) or (ecgData.get(nIndex + 1).toLong() and 0xFFL shl 8 )
 
-                    /*
                     if(tmp1 >10000L ) tmp1 = ECG_pp.get(ECG_th - ECG_pc - 1).yVal.toLong()
 
                     if(ECG_pc<ECG_th){
                         ECG_pp += DataPoint((ECG_th - ECG_pc), tmp1.toInt())
                         ECG_pc++
                     }
-                    */
                     outdata.set(i+1, tmp1)/////ecg
                 }
 
@@ -535,20 +440,11 @@ class health_panel : AppCompatActivity() {
 
             }
             else if(characteristic.uuid == UUID.fromString(UUID_CHAR_BCG)){
-
-                var bcgFile = File(storagePath, "$ECG_DATA_DIRECTORY/$DefaultBCGName")
                 var j = 0
+
                 var hrtotal = 0
                 var hrcnt =0
 
-
-                if(BCG_pc == BCG_th){
-
-                    BCG_pp = BCG_pp.drop(6)
-                    for(r in BCG_pp) r.xVal += 6
-                    BCG_pc -= 6
-
-                }
 
                 while(j <6) {
 
@@ -564,19 +460,16 @@ class health_panel : AppCompatActivity() {
 
 ///////////////////////////////PreADC
                     var unsigned_check = ( ecgData.get(nowIndex).toLong() and 0xFFL ) or (ecgData.get(nowIndex2).toLong() and 0xFFL shl 8 ) or (ecgData.get(nowIndex3).toLong() and 0xFFL shl 16)
-                    ///if(unsigned_check>8388608) unsigned_check -= 16777216
+                    if(unsigned_check>8388608) unsigned_check -= 16777216
 
                     outdata.set(2, unsigned_check.toLong())
-                    if(BCG_pc<BCG_th ) {
-                        BCG_pp += DataPoint((BCG_th - BCG_pc), (unsigned_check).toInt())
-                        BCG_pc++
-                    }
+
                     //else if(BCG_pc == BCG_th && ECG_draw>0){
                     // BCG_pp.drop(1)
                     // BCG_pp { it.xVal -=1}
                     // BCG_pp += DataPoint((BCG_th - BCG_pc), (unsigned_check+2000000).toInt())
-
                     //}
+
                     //outdata.set(2, (ecgData.get(nowIndex).toUByte().toLong() or (ecgData.get(nowIndex2).toUByte().toLong().shl(8)) or (ecgData.get(nowIndex3)).toUByte().toLong().shl(16)))
                     nowIndex +=3
                     outdata.set(3, ecgData.get(nowIndex).toLong())///heart rate
@@ -591,13 +484,13 @@ class health_panel : AppCompatActivity() {
                     val hrtmp = outdata.get(3).toInt()
 
                     if(hrtmp >40 && hrtmp <250){
-                            hrcnt++
-                            hrtotal +=hrtmp
+                        hrcnt++
+                        hrtotal +=hrtmp
                     }
 
                     //var signal_status = outdata.get(5)/16
 
-                    var minus_test =(ecgData.get(nowIndex).toLong() and 0xFFL) or (ecgData.get(nowIndex2).toLong() and 0xFFL shl 8 )
+                    var minus_test =ecgData.get(nowIndex).toUByte().toLong() or (ecgData.get(nowIndex2).toUByte().toLong().shl(8))
                     if(minus_test > 32767 )minus_test -= 65536
                     outdata.set(6, minus_test)//////////ACC_x
                     //outdata.get(6)
@@ -605,14 +498,14 @@ class health_panel : AppCompatActivity() {
                     nowIndex += 2
                     nowIndex2 = nowIndex +1
 
-                    minus_test = (ecgData.get(nowIndex).toLong() and 0xFFL) or (ecgData.get(nowIndex2).toLong() and 0xFFL shl 8 )
+                    minus_test = ecgData.get(nowIndex).toUByte().toLong() or (ecgData.get(nowIndex2).toUByte().toLong().shl(8) )
                     if(minus_test > 32767 )minus_test -= 65536
                     outdata.set(7, minus_test)//////////ACC_y
 
                     nowIndex += 2
                     nowIndex2 = nowIndex +1
 
-                    minus_test = (ecgData.get(nowIndex).toLong() and 0xFFL) or (ecgData.get(nowIndex2).toLong() and 0xFFL shl 8 )
+                    minus_test = ecgData.get(nowIndex).toUByte().toLong() or (ecgData.get(nowIndex2).toUByte().toLong().shl(8) )
                     if(minus_test > 32767 )minus_test -= 65536
                     outdata.set(8, minus_test)//////////ACC_z
                     nowIndex += 2
@@ -636,7 +529,7 @@ class health_panel : AppCompatActivity() {
                     j+=1
                 }///////write bcg parced data
                 if(hrcnt>0){
-                    val hrtmp = (hrtotal/hrcnt)
+                    val hrtmp = (hrtotal/hrcnt).toInt()
                     hrlist.add(hrtmp)
                 }
                 else {
@@ -675,33 +568,31 @@ class health_panel : AppCompatActivity() {
     }
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-            if(requestCode==1 && resultCode == RESULT_OK){
+        if(requestCode==1 && resultCode == RESULT_OK){
 
-                device_add = data!!.getStringExtra("device").toString()
-                val builder = AlertDialog.Builder(this)
-                builder.setMessage("Connect to " +  device_add + " successful!")
-                builder.show()
+            device_add = data!!.getStringExtra("device").toString()
+            val builder = AlertDialog.Builder(this)
+            builder.setMessage("Connect to " +  device_add + " successful!")
+            builder.show()
+            bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+            bluetoothAdapter = bluetoothManager?.adapter
 
+            write_new_file()
 
-                bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-                bluetoothAdapter = bluetoothManager?.adapter
+            Thread {
 
+                for (r in bluetoothManager.getConnectedDevices(BluetoothProfile.GATT)){
+                    if(r.address == device_add) device = r
+                }
 
+                mgatt = device.connectGatt(this, false, gattCB)
+            }.start()
 
+            bt_bluetooth.setImageResource(R.drawable.bt_on)
+            blecnt =true
 
-                bt_bluetooth.setImageResource(R.drawable.bt_on)
-                blecnt =true
-
-            }
-        else if(requestCode==1){
-            finish()
         }
-        else if(requestCode == 5 && resultCode == RESULT_OK){
-            user = data!!.getStringExtra("user")!!
-                val builder = AlertDialog.Builder(this)
-                builder.setMessage("User changed to " + user)
-                builder.show()
-        }
+//        else if(requestCode==1 && resultCode == RESULT_OK){ }
 
     }
 
@@ -719,10 +610,10 @@ class health_panel : AppCompatActivity() {
         if(FinalBCGname == DefaultBCGName){
         }
         else {
-            var extFile = File(storagePath, "$ECG_DATA_DIRECTORY/$DefaultFileName")
-            var bcgFile = File(storagePath, "$ECG_DATA_DIRECTORY/$DefaultBCGName")
-
+            extFile = File(storagePath, "$ECG_DATA_DIRECTORY/$DefaultFileName")
             extFile.appendText("app_version: 0.1.0" + "\n" + "Start_Time: " + dff.format(Date()) + "\n")
+
+            bcgFile = File(storagePath, "$ECG_DATA_DIRECTORY/$DefaultBCGName")
             bcgFile.appendText("app_version: 0.1.0" + "\n" + "Start_Time: " + dff.format(Date()) + "\n")
         }
         FinalECGname = DefaultFileName
@@ -744,7 +635,6 @@ class health_panel : AppCompatActivity() {
                 mgatt?.disconnect()
                 broadcastUpdate(ACTION_GATT_DISCONNECTED)
             }
-
             //if(plot_thread.isAlive)plot_thread.interrupt()
 
             blecnt = false
@@ -782,47 +672,6 @@ class health_panel : AppCompatActivity() {
         }
     }
 
-    fun clickwaveform(view: View) {
-        when(wavemode){
-            0->{
-
-                bt_waveform.text = "心跳波型"
-                wavemode = 1
-            }//////////origin wave to heartbeat
-            1->{
-
-                bt_waveform.text = "呼吸波型"
-                wavemode = 2
-            }//////////heartbeat wave to hushi
-            2->{
-                bt_waveform.text = "疲勞波型"
-                wavemode = 3
-            }//////////hushi wave to fatigue
-            3->{
-                bt_waveform.text = "原始波型"
-                wavemode = 0
-
-            }//////////fatigue to origin
-        }
-
-    }
-
-    fun clickautoup(view: View) {
-        if(autoup){
-
-            bt_autoup.text = "開啟數據上傳"
-            autoup = false
-        }
-        else{
-
-            bt_autoup.text = "關閉數據上傳"
-            autoup = true
-        }
-    }
-
-    fun clickwaveset(view: View) {
-
-    }
 
     fun fetchJSON(){
         Thread{
@@ -895,52 +744,65 @@ class health_panel : AppCompatActivity() {
             }
         }.start()
 
-
     }
 
-    fun clickvib(view: View) {
-        if(vibmode){
-            ib_vib.setImageResource(R.drawable.vib_off)
-            vibmode =false
+    fun backtomain(view: View) {
+        //if(!blecnt){
+            //if(!ecgdatalog.isEmpty() || !bcgdatalog.isEmpty() ) {
+               // getIntent().putStringArrayListExtra("ecgdatalog", ecgdatalog)
+               // getIntent().putStringArrayListExtra("bcgdatalog", bcgdatalog)
+
+              //  setResult(RESULT_OK, getIntent())
+              //  finish()
+
+            //}
+            //else{
+            //    setResult(RESULT_CANCELED, getIntent())
+            //    finish()
+            //}
+        //}
+        //else {
+
+        //    val intent = Intent(this, MainActivity::class.java)
+        //    intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        //    startActivity(intent)
+
+        //}
+
+        if(blecnt){
+            val intent = Intent(this, MainActivity::class.java)
+            intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            startActivity(intent)
         }
         else{
-            ib_vib.setImageResource(R.drawable.vib_on)
-            vibmode = true
+            finish()
         }
-    }
-
-    fun clickchangeuser(view: View) {
-        val intent = Intent(this, changeuser::class.java)
-        startActivityForResult(intent, 5)
 
     }
-    fun clickdata(view: View) {
-        if(!dataclt) {
-            Thread {
-                //var dev_ind =0
-                /*
-                for (r in bluetoothManager.getConnectedDevices(BluetoothProfile.GATT)) {
-                    if (r.address == device_add) {
-                        device = r
-                    }
+
+    fun clickbluetooth(view: View) {
+
+            if(!blecnt) {
+
+                val intent = Intent(this, bluetooth::class.java)
+                startActivityForResult(intent, 1)
+
+            }
+            else{
+
+                if (mgatt?.device != null) {
+                    //send_stop()/////stop
+
+                    mgatt?.disconnect()
+                    broadcastUpdate(ACTION_GATT_DISCONNECTED)
                 }
-                */
-                device = bluetoothManager.getConnectedDevices(GATT)[0]
+                //if(plot_thread.isAlive)plot_thread.interrupt()
 
-                //device = bluetoothManager.getConnectedDevices(BluetoothProfile.GATT)[0]
-                mgatt = device.connectGatt(this, false, gattCB)
-            }.start()
-            write_new_file()
-            dataclt = true
+                blecnt = false
+                bt_bluetooth.setImageResource(R.drawable.bt_off)
 
-        }
-        else{
+            }
 
-            if (mgatt?.device != null) mgatt?.disconnect()
-            dataclt = false
-        }
 
     }
-
-
 }

@@ -30,13 +30,13 @@ class GraphView(context: Context, attributeSet: AttributeSet ?=null): View(conte
     }
 
     private val dataPointLinePaint = Paint().apply {
-        color = Color.BLUE
+        color = Color.MAGENTA
         strokeWidth = 2f
         isAntiAlias = true
     }
 
     private val axisLinePaint = Paint().apply {
-        color = Color.DKGRAY
+        color = Color.TRANSPARENT
         strokeWidth = 4f
     }
 

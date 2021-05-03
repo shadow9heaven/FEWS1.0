@@ -1,5 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">drive_status_cntl</string>
+    <string name="app_name">drive_status_control</string>
     <string name="title_activity_bluetooth">藍芽連接</string>
     <string name="tab_text_1">Tab 1</string>
     <string name="tab_text_2">Tab 2</string>
@@ -13,6 +14,8 @@
     <string name="next">Next</string>
     <string name="previous">Previous</string>
 
+
+
     <string name="main_ble_connect">裝置連接</string>
     <string name="main_data_collect">資料收集</string>
     <string name="main_OTA">OTA</string>
@@ -20,6 +23,8 @@
     <string name="main_PVT">PVT測試</string>
     <string name="main_drive_test">駕駛測試</string>
     <string name="main_upload">上傳資料</string>
+
+
 
     <string name="kss_1">1. 極度警覺</string>
     <string name="kss_2">2. 很警覺</string>
@@ -31,7 +36,7 @@
     <string name="kss_8">8. 想睡，需花費一些努力維持清醒</string>
     <string name="kss_9">9. 非常想睡，需花費很大的力氣維持清醒</string>
     <string name="kss_10">10. 極度想睡，無法保持清醒</string>
-    <string name="kss_select">選擇現在的KSS分數  然後連點畫面下半部結束測試</string>
+    <string name="kss_select">選擇現在的KSS分數  然後連點畫面下半部結束測試 測試結果存放於APP資料夾內的TEST的資料夾內</string>
     <string name="kss_start">點擊畫面下半部開始實驗</string>
 
     <string name="ecg_button">收集資料</string>
@@ -40,9 +45,9 @@
     <string name="ecg_plot_button">波形圖</string>
     <string name="ecg_plot_stop_button">停止畫圖</string>
 
-    <string name="ecg_device_select">選擇裝置 </string>
-    <string name="heartrate">HR:</string>
-    <string name="respiratory">respiratory:</string>
-    <string name="pressure">壓力計波型</string>
+    <string name ="ecg_device_select">選擇裝置 </string>
 
+    <string name = "heartrate">心率:</string>
+    <string name = "respiratory">呼吸:</string>
+    <string name = "pressure">壓力器波形</string>
 </resources>

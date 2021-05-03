@@ -160,17 +160,19 @@ class bluetooth : AppCompatActivity() {
                 false,
                 gattCallback
         )
+
         sleep(1000)
+
         if(bluetoothManager?.getConnectionState(mgatt.device,GATT) != STATE_DISCONNECTED && bluetoothManager?.getConnectionState(mgatt.device, GATT) != STATE_DISCONNECTING){
             val builder = AlertDialog.Builder(this@bluetooth)
-            builder.setMessage("Connect to " + mgatt.device.toString() + " successful!")
-            builder.show()
+            //builder.setMessage("Connect to " + mgatt.device.toString() + " successful!")
+            //builder.show()
             device_connect = true
+            //mgatt.disconnect()
 
             getIntent().putExtra("device",mgatt.device.toString())
-            setResult(RESULT_OK)
+            setResult(RESULT_OK , getIntent())
             finish()
-
 
         }
     }
@@ -249,7 +251,35 @@ class bluetooth : AppCompatActivity() {
         }
 
     fun clickUpdate(view: View) {
+        if (bluetoothAdapter?.isEnabled == false) {
+            val intent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            startActivityForResult(intent, 1)
+        }
 
+        for(i in devicename) devicename -= i
+
+        bluetoothLeScanner!!.startScan(leScanCallback)
+
+        tx_srh.text = "Searching......"
+        bthHandler?.postDelayed(Runnable {
+            bluetoothLeScanner!!.stopScan(leScanCallback)
+            for (r in BLE_DeviceList) {
+                val hashMap: HashMap<String, String> = HashMap()
+                hashMap.put("name", r.value.device.name)
+                hashMap.put("misc", r.key)
+                if (!devicename.contains(hashMap)) devicename += hashMap
+            }
+
+            adapter = SimpleAdapter(
+                    this,
+                    devicename,
+                    android.R.layout.simple_list_item_2,
+                    listlabel,
+                    listid
+            );
+            listView.setAdapter(adapter);
+            tx_srh.text = ""
+        }, 3000)
     }
     fun clickback(view: View) {
         if(device_connect) {

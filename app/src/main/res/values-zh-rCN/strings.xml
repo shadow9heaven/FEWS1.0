@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">drive_status_control</string>
+    <string name="title_activity_bluetooth">连接蓝芽</string>
+    <string name="tab_text_1">Tab 1</string>
+    <string name="tab_text_2">Tab 2</string>
+    <string name="title_activity_real_p_v_t">PVT测试</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="title_activity_version">version</string>
+    <!-- Strings used for fragments for navigation -->
+    <string name="first_fragment_label">First Fragment</string>
+    <string name="second_fragment_label">Second Fragment</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+
+
+
+    <string name="main_ble_connect">装置连接</string>
+    <string name="main_data_collect">资料收集</string>
+    <string name="main_OTA">OTA</string>
+    <string name="main_profile">个人资料</string>
+    <string name="main_PVT">PVT测试</string>
+    <string name="main_drive_test">驾驶测试</string>
+    <string name="main_upload">上传资料</string>
+
+
+
+    <string name="kss_1">1. 极度警觉</string>
+    <string name="kss_2">2. 很警觉</string>
+    <string name="kss_3">3. 警觉</string>
+    <string name="kss_4">4. 有点警觉</string>
+    <string name="kss_5">5. 既不警觉也不想睡</string>
+    <string name="kss_6">6. 有一些睡意</string>
+    <string name="kss_7">7. 想睡，但不需特别努力维持清醒</string>
+    <string name="kss_8">8. 想睡，需花费一些努力维持清醒</string>
+    <string name="kss_9">9. 非常想睡，需花费很大的力气维持清醒</string>
+    <string name="kss_10">10. 极度想睡，无法保持清醒</string>
+    <string name="kss_select">选择现在的KSS分数 然后连点画面下半部结束测试 测试结果存放于APP资料夹内的TEST的资料夹内</string>
+    <string name="kss_start">点击画面下半部开始实验</string>
+
+    <string name="ecg_button">收集资料</string>
+    <string name="ecg_stop_button">停止收集</string>
+
+    <string name="ecg_plot_button">波形圖</string>
+    <string name="ecg_plot_stop_button">停止畫圖</string>
+
+    <string name ="ecg_device_select">选择装置 </string>
+
+    <string name = "heartrate">心率:</string>
+    <string name = "respiratory">呼吸:</string>
+    <string name = "pressure">压力計波形</string>
+</resources>
