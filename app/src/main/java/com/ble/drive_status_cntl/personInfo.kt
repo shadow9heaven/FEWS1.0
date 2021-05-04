@@ -85,10 +85,11 @@ class personInfo : AppCompatActivity(),View.OnClickListener{
             }
             file.writeText(input)
         } catch (e:IOException) {
-            // TODO Auto-generated catch block
+
             e.printStackTrace();
         }
     }
+
     private fun findID(){
         bt_back=findViewById(R.id.bt_back)
         bt_back.setOnClickListener(this)
@@ -168,8 +169,10 @@ class personInfo : AppCompatActivity(),View.OnClickListener{
         filestring = file.readText(Charsets.UTF_8)
         try {
             if (filestring.equals("null")) {
+
                 Log.e("test","here")
                 writeLog("[$personObject]")
+
             }
             else{
                 filestring=filestring.removePrefix("[").removeSuffix("]")
@@ -338,9 +341,7 @@ class personInfo : AppCompatActivity(),View.OnClickListener{
         }
     }
     private fun license_spin(){
-        val licenselist = arrayListOf(
-            "scooter","car","truck"
-        )
+        val licenselist = arrayListOf("scooter","car","truck")
         val adapter = ArrayAdapter(
             this,
             android.R.layout.simple_spinner_dropdown_item,

@@ -28,11 +28,11 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
 
-        /*
+
         val intent = Intent(this, Initial::class.java)
         intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         startActivityForResult(intent, 30)
-        */
+
 
         sp_car = findViewById(R.id.sp_car)
         val adapter2 = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item , carlist)
@@ -90,7 +90,16 @@ class MainActivity : AppCompatActivity() {
 
             Toast.makeText(this, "user:"+ userName, Toast.LENGTH_LONG).show()
         }
+        else if (requestCode == 30)
+        {
+            if(resultCode == RESULT_OK){
 
+            }
+            else{
+                finish()
+
+            }
+        }
         else{
 
         }

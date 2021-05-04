@@ -34,6 +34,10 @@ import java.io.File
 
 
 class Initial : AppCompatActivity() , View.OnClickListener{
+
+    var username :String = "guest"
+
+
     lateinit var bt_gmail:SignInButton
     lateinit var bt_Login:Button
     lateinit var bt_register:Button
@@ -98,9 +102,10 @@ class Initial : AppCompatActivity() , View.OnClickListener{
             }
             R.id.bt_Login -> {
                 if (CheckConnectStatus()) {
-                    val intent = Intent(this, MainActivity::class.java)
+
+                    val intent = Intent(this, loginactivity::class.java)
                     intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-                    startActivityForResult(intent, 2)
+                    startActivityForResult(intent, 4)
                     Toast.makeText(this, "Please Login.", Toast.LENGTH_SHORT).show()
                 } else {
                     Toast.makeText(this, "Please check connect status", Toast.LENGTH_SHORT).show()
@@ -129,21 +134,34 @@ class Initial : AppCompatActivity() , View.OnClickListener{
                     if (CheckConnectStatus()){
                         val array=JSONArray(filestring)
                         val personObject:JSONObject=JSONObject(array[user].toString())
-                        if(personObject.getString("username").toString()=="null"){
+                        username = personObject.getString("username").toString()
+                        if(username=="null"){
+
                             val intent = Intent(this, Register::class.java)
                             intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
                             intent.putExtra("user",user)
                             startActivityForResult(intent, 2)
+
                         }else{
                             getJSON(personObject)
 
+                            getIntent().putExtra("user", username)
+                            setResult(RESULT_OK, getIntent())
+                            finish()
                         }
+
+
                     }
                     else{
                         val array=JSONArray(filestring)
                         val personObject:JSONObject=JSONObject(array[user].toString())
                         Log.e("Log","$personObject")
+
+
+
                     }
+
+
                 }
             }
         }
@@ -160,18 +178,33 @@ class Initial : AppCompatActivity() , View.OnClickListener{
             bt_gmail.visibility=View.VISIBLE
         }
     }
+/*
     override fun onBackPressed() {
         //super.onBackPressed()
     }
+*/
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if(requestCode==0 && resultCode ==RESULT_OK) {
+
             val task =GoogleSignIn.getSignedInAccountFromIntent(data)
             handleSignInResult(task)
         }
         else if(requestCode==2 && resultCode ==RESULT_OK){
             userlist_spin()
+
         }
+        else if(requestCode == 4 && resultCode == RESULT_OK){
+            username = data?.getStringExtra("user")!!
+
+            getIntent().putExtra("user", username)
+            setResult(RESULT_OK, getIntent())
+            finish()
+        }
+        else{
+
+        }
+
     }
     private fun userlist_spin(){
         var file = File(commandPath, filename)

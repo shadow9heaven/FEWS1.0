@@ -58,7 +58,7 @@ class loginactivity : AppCompatActivity(), View.OnClickListener {
         super.onActivityResult(requestCode, resultCode, data)
         if(requestCode==1&&resultCode == RESULT_OK){
             message = data?.getStringExtra("userID").toString()
-            Log.e("MainActivity ", message)
+            Log.e("loginactivity ", message)
         }
         else if(requestCode==2&&resultCode == RESULT_OK){
             setResult(RESULT_OK, getIntent())
@@ -141,14 +141,19 @@ class loginactivity : AppCompatActivity(), View.OnClickListener {
         val Json:JSONObject= JSONObject(resStr)
         resStr_password=Json.getString("password")
         var oid=Json.getJSONObject("_id")?.getString("\$oid")
-        Log.e("MainActivity", "$oid")
+        Log.e("loginactivity", "$oid")
         if(BCrypt.checkpw(password, resStr_password)){
             pack_personfile(Json)
             Toast.makeText(this, "Login", Toast.LENGTH_SHORT).show()
-            val intent = Intent(this, Carinfo::class.java)
-            intent.putExtra("oid", oid)
-            startActivityForResult(intent, 2)
-            Toast.makeText(this, "Please add the information of your car.", Toast.LENGTH_SHORT).show()
+
+            getIntent().putExtra("user", username)
+            setResult(RESULT_OK, getIntent())
+            finish()
+
+            //val intent = Intent(this, Carinfo::class.java)
+            //intent.putExtra("oid", oid)
+            //startActivityForResult(intent, 2)
+            //Toast.makeText(this, "Please add the information of your car.", Toast.LENGTH_SHORT).show()
         }
         else Toast.makeText(this, "Password is wrong", Toast.LENGTH_SHORT).show()
     }

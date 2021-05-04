@@ -160,6 +160,7 @@ class Carinfo : AppCompatActivity() {
             SystemClock.sleep(500)
             for(i in devicename) devicename -= i
             ListCar()
+
         }
         else{
             Log.e("MainActivity","Error.")
