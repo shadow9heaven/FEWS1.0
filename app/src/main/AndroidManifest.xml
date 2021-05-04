@@ -27,10 +27,33 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Drive_status_cntl">
-        <activity android:name=".changeuser"
+        <activity
+            android:name=".Initial"
             android:screenOrientation="portrait"
-
-            ></activity>
+            android:theme="@style/Theme.Login.AppBarOverlay"
+            />
+        <activity
+            android:name=".AddCarInfo"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Login.AppBarOverlay" />
+        <activity
+            android:name=".personInfo"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Login.AppBarOverlay" />
+        <activity
+            android:name=".Carinfo"
+            android:label="Select Car"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Register"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Login.AppBarOverlay" />
+        <activity
+            android:name=".loginactivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".changeuser"
+            android:screenOrientation="portrait" />
         <activity android:name=".ecg_collect" />
         <activity
             android:name=".upload_data"
@@ -44,15 +67,17 @@
             android:theme="@style/Theme.AppCompat.DayNight.NoActionBar" />
         <activity
             android:name=".MainActivity"
-            android:screenOrientation="portrait"
-
-            >
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <meta-data
+            android:name="firebase_performance_logcat_enabled"
+            android:value="true" />
     </application>
 
 </manifest>

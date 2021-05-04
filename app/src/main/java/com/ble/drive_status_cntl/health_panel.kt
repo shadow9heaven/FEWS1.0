@@ -35,7 +35,7 @@ import java.lang.Math.random
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.*
-import at.favre.lib.crypto.bcrypt.BCrypt
+import org.mindrot.jbcrypt.BCrypt
 
 class health_panel : AppCompatActivity() {
 

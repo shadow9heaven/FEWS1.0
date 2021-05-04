@@ -3,6 +3,7 @@ package com.ble.drive_status_cntl
 import android.bluetooth.le.ScanResult
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Environment
 import android.util.Log
 import android.view.View
 import android.widget.ListView
@@ -17,8 +18,12 @@ import java.util.HashMap
 
 class changeuser : AppCompatActivity() {
 
+    lateinit var userPath :File
     lateinit var userfile : File
+    lateinit var user_text :String
+
     lateinit var lv_user :ListView
+
     var adapter: SimpleAdapter? = null
 
 
@@ -38,6 +43,23 @@ class changeuser : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_changeuser)
+
+
+        userPath = File(Environment.getStorageDirectory().absolutePath)
+        userfile = File(userPath, "")
+
+
+        try {
+            user_text = userfile.readText(Charsets.UTF_8)
+            Log.e("cmd_text", user_text)
+            var cmdlist = user_text.split("\n")
+
+            //for(a in cmdlist)Log.e("cmd",a)
+
+            //run_macro(cmdlist, view)
+        } catch (e: java.lang.Exception) {
+        }
+
 
         lv_user = findViewById(R.id.userlist)
 
