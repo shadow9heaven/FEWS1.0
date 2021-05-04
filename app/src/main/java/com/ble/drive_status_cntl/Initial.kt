@@ -1,15 +1,15 @@
 package com.ble.drive_status_cntl
 
 import android.Manifest
+import android.app.AlertDialog
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import android.os.Build
-import android.os.Bundle
-import android.os.Environment
-import android.os.SystemClock
+import android.os.*
 import android.util.Log
 import android.view.View
 import android.widget.*
@@ -31,6 +31,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import org.mindrot.jbcrypt.BCrypt
 import java.io.File
+import java.lang.Exception
 
 
 class Initial : AppCompatActivity() , View.OnClickListener{
@@ -47,6 +48,7 @@ class Initial : AppCompatActivity() , View.OnClickListener{
     lateinit var resStr:String
     var user=0
     var url = "http://59.120.189.128:5000/data/biologueQuery"
+    var timerHandler2: Handler? = Handler()
     ////load file
     lateinit var commandPath : File
     val filename = "emulated/0/personalFile_4_28.txt"
@@ -62,15 +64,22 @@ class Initial : AppCompatActivity() , View.OnClickListener{
             bt_gmail.visibility=View.VISIBLE
             Toast.makeText(this, "${acct.displayName}", Toast.LENGTH_SHORT).show()
         }
-        userlist_spin()
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             Log.e("Permission", "Request External Storage")
+
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
                 9
             )
         }
+
+        try {
+            userlist_spin()
+            timerHandler2?.postDelayed(timerRunnable2, 0)
+        }catch (e :Exception){
+        }
+
     }
     private fun findID() {
         ///userlist
@@ -129,39 +138,22 @@ class Initial : AppCompatActivity() , View.OnClickListener{
             R.id.bt_confirm -> {
                 var file = File(commandPath, filename)
                 var filestring = file.readText(Charsets.UTF_8)
+                val array = JSONArray(filestring)
+                val personObject: JSONObject = JSONObject(array[user].toString())
                 if (filestring.equals("null")) Toast.makeText(this, "Please Login or Register.", Toast.LENGTH_SHORT).show()
                 else {
-                    if (CheckConnectStatus()){
-                        val array=JSONArray(filestring)
-                        val personObject:JSONObject=JSONObject(array[user].toString())
-                        username = personObject.getString("username").toString()
-                        if(username=="null"){
-
-                            val intent = Intent(this, Register::class.java)
-                            intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-                            intent.putExtra("user",user)
-                            startActivityForResult(intent, 2)
-
-                        }else{
+                    if (CheckConnectStatus()) {
+                        val array = JSONArray(filestring)
+                        val personObject: JSONObject = JSONObject(array[user].toString())
+                        if (personObject.getString("username").toString() == "null") {
+                            askRegister(personObject)
+                        } else {
                             getJSON(personObject)
 
-                            getIntent().putExtra("user", username)
-                            setResult(RESULT_OK, getIntent())
-                            finish()
                         }
-
-
+                    } else {
+                        Log.e("Log", "$personObject")
                     }
-                    else{
-                        val array=JSONArray(filestring)
-                        val personObject:JSONObject=JSONObject(array[user].toString())
-                        Log.e("Log","$personObject")
-
-
-
-                    }
-
-
                 }
             }
         }
@@ -290,5 +282,56 @@ class Initial : AppCompatActivity() , View.OnClickListener{
                 else Log.e("Login","Error")
             }
         })
+    }
+    private val timerRunnable2: Runnable = object : Runnable {
+        @RequiresApi(Build.VERSION_CODES.M)
+        override fun run() {
+            runOnUiThread {
+                if(CheckConnectStatus()){
+                    bt_Login.isClickable=true
+                    bt_Login.setTextColor(getColor(R.color.black))
+                }
+                else{
+                    bt_Login.setTextColor(getColor(R.color.gray))
+                    bt_Login.isClickable=false
+                }
+                if(userlist.get(0)=="NULL"){
+                    bt_confirm.isClickable=false
+                    bt_confirm.setTextColor(getColor(R.color.gray))
+                }
+                else{
+                    bt_confirm.isClickable=true
+                    bt_confirm.setTextColor(getColor(R.color.black))
+                }
+            }
+            timerHandler2!!.postDelayed(this, 1000)
+        }
+    }
+    private fun askRegister(personObject: JSONObject){
+        AlertDialog.Builder(this)
+            .setTitle("Suggest")
+            .setMessage("Do you mind to Register a account?")
+            .setPositiveButton("OK", DialogInterface.OnClickListener { dialogInterface, i ->
+                val intent = Intent(this, Register::class.java)
+                intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+                intent.putExtra("user", user)
+                startActivityForResult(intent, 2)
+            })
+            .setNegativeButton("No", DialogInterface.OnClickListener { dialogInterface, i ->
+                Log.e("Log", "$personObject")
+            })
+            .setCancelable(false)
+            .show()
+    }
+    override fun onRequestPermissionsResult(requestCode: Int,
+                                            permissions: Array<String>, grantResults: IntArray) {
+        when (requestCode) {
+            9-> {
+                userlist_spin()
+                timerHandler2?.postDelayed(timerRunnable2, 0)
+            }
+            else -> {
+            }
+        }
     }
 }
