@@ -110,8 +110,13 @@ class Carinfo : AppCompatActivity() {
         ListCar()
         refreshApp()
         listView.setOnItemClickListener{ parent, view, position, id ->
-            test(position)
+            //test(position)
+            val car_id=Car_List.keys.elementAt(position)
+            getIntent().putExtra("car",car_id)
+            setResult(RESULT_OK, getIntent())
+            finish()
         }
+
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             Log.e("Permission", "Request External Storage")
             ActivityCompat.requestPermissions(
@@ -125,6 +130,7 @@ class Carinfo : AppCompatActivity() {
     private fun findID(){
         listView = findViewById<ListView>(R.id.car_list)
         swipeToRefresh =findViewById(R.id.swipeToRefresh)
+
     }
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -137,8 +143,8 @@ class Carinfo : AppCompatActivity() {
             add_information()
         }
         else if(id==R.id.logout){
-            setResult(RESULT_OK, getIntent())
-            finish()
+            //setResult(RESULT_, getIntent())
+            //finish()
         }
         return true;
     }
@@ -155,7 +161,7 @@ class Carinfo : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if(requestCode==2&&resultCode == RESULT_OK){
             Log.e("CarInfo","BACK")
-            SystemClock.sleep(500)
+           // SystemClock.sleep(500)
             getJSON()
             SystemClock.sleep(500)
             for(i in devicename) devicename -= i
@@ -324,9 +330,9 @@ class Carinfo : AppCompatActivity() {
         bcg= arrayListOf()
         acc= arrayListOf()
         ecg= arrayListOf()
-        Thread_ECG.start()
-        Thread_BCG.start()
-        SystemClock.sleep(100)
+        //Thread_ECG.start()
+        //Thread_BCG.start()
+        //SystemClock.sleep(100)
         Thread_sendDate.start()
     }
     private fun ECG(){

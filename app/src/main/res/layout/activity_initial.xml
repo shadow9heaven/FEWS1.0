@@ -35,7 +35,9 @@
                 android:id="@+id/bt_confirm"
                 android:layout_width="150dp"
                 android:layout_height="wrap_content"
-                android:text="confirm"></Button>
+                android:text="confirm"
+
+                ></Button>
         </LinearLayout>
         <LinearLayout
             android:id = "@+id/ll_Login"
@@ -95,5 +97,35 @@
                 android:textColor="#121010"
                 android:textSize="14sp" />
         </LinearLayout>
+        <LinearLayout
+        android:id = "@+id/ll_exit_and_demo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+
+            app:layout_constraintTop_toBottomOf="@id/ll_gmail"
+        >
+            <Button
+            android:id="@+id/bt_exit"
+            android:layout_width="100dp"
+            android:layout_height="50dp"
+            android:text="exit"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="50dp"
+            />
+            <Button
+                android:id="@+id/bt_guest_mode"
+                android:layout_width="100dp"
+                android:layout_height="50dp"
+                android:text="guest"
+                android:layout_marginLeft="50dp"
+                />
+
+        </LinearLayout>
     </LinearLayout>
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>

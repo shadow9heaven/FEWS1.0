@@ -39,6 +39,8 @@ import org.mindrot.jbcrypt.BCrypt
 
 class health_panel : AppCompatActivity() {
 
+    val BCG_PACKET_SIZE = 10
+
     val BCG_SIZE = 1280
     val ECG_SIZE = 2560
 
@@ -46,7 +48,7 @@ class health_panel : AppCompatActivity() {
 
     var vibmode = false
     var viblevel = 0
-
+    lateinit var bt_startdatacollect :Button
 
     val UPLOAD_TIME = 300
 
@@ -84,7 +86,6 @@ class health_panel : AppCompatActivity() {
 
 
     var uploadcount = 0
-
 
     lateinit var plot_thread :Thread
     lateinit var write_thread :Thread
@@ -166,6 +167,9 @@ class health_panel : AppCompatActivity() {
                         2->{
                             //GV?.setData(re_gv)
                         }////respritory
+                        3->{
+
+                        }
                     }/////draw graph
 
                     if(paklost) {
@@ -232,6 +236,9 @@ class health_panel : AppCompatActivity() {
                         uploadcount ++
                     }
                     else if(autoup){
+                        //autoup = false
+                        uploadcount =0
+
 /////////////////upload data to database
                         Thread{
                         var upload_ECG = File(storagePath, "$ECG_DATA_DIRECTORY/$DefaultFileName")
@@ -263,20 +270,30 @@ class health_panel : AppCompatActivity() {
                                         else if (bcgcount == BCG_SIZE){
                                             bcg_timestampEND = tmp[0].toInt()
                                         }
-                                        bcgbuffer.add(tmp[1].toInt())
-                                        if(bcgcount == BCG_SIZE){
-                                                jsonObject = JSONObject()
-                                                jsonObject.put("post_t", 3)
-                                                jsonObject.put("bcg",bcgbuffer)
-                                                jsonObject.put("acc",1)
-                                                jsonObject.put("device_t",device_add)
-                                                jsonObject.put("BCGID",1)
-                                                jsonObject.put("data_len",BCG_SIZE)
-                                                //jsonObject.put("id")
-                                                jsonObject.put("timestampST",bcg_timestampST)
-                                                jsonObject.put("timestampEND",bcg_timestampEND)
 
-                                                fetchJSON()
+                                        bcgbuffer.add(tmp[1].toInt())
+
+                                        if(bcgcount == BCG_SIZE){
+                                               var bcgObject = JSONObject()
+                                                bcgObject.put("post_t", 3)
+                                                bcgObject.put("bcg",bcgbuffer)
+                                                bcgObject.put("acc",1)
+                                            //////acc x or y or z?
+                                                //jsonObject.put("acc",tmp[])
+                                            /////acc x or y or z
+                                                //jsonObject.put("id",BCG_Algo_ID)
+
+                                                bcgObject.put("id_len",2)
+                                                bcgObject.put("timestamp",Date().time)
+
+                                                bcgObject.put("device_t",device_add)
+                                                bcgObject.put("BCGID",1)
+                                                bcgObject.put("data_len",BCG_SIZE)
+                                                //jsonObject.put("id")
+                                                bcgObject.put("timestampST",bcg_timestampST)
+                                                bcgObject.put("timestampEND",bcg_timestampEND)
+
+                                            fetchJSON()
 
                                                 bcgbuffer.clear()
                                                 bcgcount = 0
@@ -298,15 +315,37 @@ class health_panel : AppCompatActivity() {
                                         ecg_timestampST = tmp[0].toInt()
                                     }
                                     else if(ecgcount == ECG_SIZE){
-                                        ecg_timestampEND = tmp[1].toInt()
+                                        ecg_timestampEND = tmp[0].toInt()
                                     }
+                                    ecgbuffer.add(tmp[1].toInt())
+                                    if(ecgcount == ECG_SIZE){
+                                        var ecgObject = JSONObject()
+                                        ecgObject.put("post_t", 4)/////string
+                                        ecgObject.put("ecg",ecgbuffer)
+                                        ecgObject.put("data_len",ECG_SIZE)
+                                        //ecgObject.put("id",ECG_Algo_ID)
+                                        ecgObject.put("id_len",2)
+                                        ecgObject.put("timestampST",ecg_timestampST)
+                                        ecgObject.put("timestampEND",ecg_timestampEND)
+                                        ecgObject.put("timestamp",Date().time)
+
+                                        fetchJSON()
+
+                                        ecgbuffer.clear()
+                                        ecgcount = 0
+                                        ecg_timestampST = 0
+                                        ecg_timestampEND =0
+
+                                    }
+
+
                                 }
                             }
                         }
                         ///////unparse
 /////////////////upload data to database
+
                         }.start()
-                        uploadcount =0
                     }//////upload
                     else{
 
@@ -339,7 +378,6 @@ class health_panel : AppCompatActivity() {
         try{
             user  = intent?.getStringExtra("user")!!
             //ECG_DATA_DIRECTORY = user
-
         }
         catch (e :Exception){
 
@@ -354,7 +392,7 @@ class health_panel : AppCompatActivity() {
         bt_bluetooth = findViewById(R.id.IB_bluetooth)
         bt_waveform  = findViewById(R.id.bt_waveform)
         bt_autoup    = findViewById(R.id.bt_autoup)
-
+        bt_startdatacollect = findViewById(R.id.bt_startdatacollect)
 
         tv_heartrate = findViewById(R.id.tv_heartrate)
         tv_time      = findViewById(R.id.tv_time)
@@ -419,7 +457,7 @@ class health_panel : AppCompatActivity() {
             //Log.e("Biologue", "Found service")
             // Get Characteristic
             biologue_char_ecg     = biologue_service.getCharacteristic(UUID.fromString(UUID_CHAR_ECG))
-            biologue_char_time    = biologue_service.getCharacteristic(UUID.fromString(UUID_CHAR_TIME))
+            //biologue_char_time    = biologue_service.getCharacteristic(UUID.fromString(UUID_CHAR_TIME))
             biologue_char_command = biologue_service.getCharacteristic(UUID.fromString(UUID_CHAR_COMMAND))
 
             biologue_char_bcg     = biologue_service.getCharacteristic(UUID.fromString(UUID_CHAR_BCG))
@@ -451,8 +489,6 @@ class health_panel : AppCompatActivity() {
                     Log.e("ECG", tmp.toString())
                 }
             }
-
-
         }
 
         override fun onDescriptorWrite(gatt: BluetoothGatt?, descriptor: BluetoothGattDescriptor?, status: Int) {
@@ -544,13 +580,13 @@ class health_panel : AppCompatActivity() {
 
                 if(BCG_pc == BCG_th){
 
-                    BCG_pp = BCG_pp.drop(6)
-                    for(r in BCG_pp) r.xVal += 6
-                    BCG_pc -= 6
+                    BCG_pp = BCG_pp.drop(BCG_PACKET_SIZE)
+                    for(r in BCG_pp) r.xVal += BCG_PACKET_SIZE
+                    BCG_pc -= BCG_PACKET_SIZE
 
                 }
 
-                while(j <6) {
+                while(j <BCG_PACKET_SIZE) {
 
                     var outdata = LongArray(11)
                     var nowIndex = j* 18
@@ -598,7 +634,7 @@ class health_panel : AppCompatActivity() {
                     //var signal_status = outdata.get(5)/16
 
                     var minus_test =(ecgData.get(nowIndex).toLong() and 0xFFL) or (ecgData.get(nowIndex2).toLong() and 0xFFL shl 8 )
-                    if(minus_test > 32767 )minus_test -= 65536
+                    //if(minus_test > 32767 )minus_test -= 65536
                     outdata.set(6, minus_test)//////////ACC_x
                     //outdata.get(6)
 
@@ -606,14 +642,14 @@ class health_panel : AppCompatActivity() {
                     nowIndex2 = nowIndex +1
 
                     minus_test = (ecgData.get(nowIndex).toLong() and 0xFFL) or (ecgData.get(nowIndex2).toLong() and 0xFFL shl 8 )
-                    if(minus_test > 32767 )minus_test -= 65536
+                    //if(minus_test > 32767 )minus_test -= 65536
                     outdata.set(7, minus_test)//////////ACC_y
 
                     nowIndex += 2
                     nowIndex2 = nowIndex +1
 
                     minus_test = (ecgData.get(nowIndex).toLong() and 0xFFL) or (ecgData.get(nowIndex2).toLong() and 0xFFL shl 8 )
-                    if(minus_test > 32767 )minus_test -= 65536
+                    //if(minus_test > 32767 )minus_test -= 65536
                     outdata.set(8, minus_test)//////////ACC_z
                     nowIndex += 2
                     nowIndex2 = nowIndex +1
@@ -673,6 +709,7 @@ class health_panel : AppCompatActivity() {
             Log.e("GATT", "WRITE " + characteristic.toString() + status.toString())
         }
     }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
             if(requestCode==1 && resultCode == RESULT_OK){
@@ -685,8 +722,6 @@ class health_panel : AppCompatActivity() {
 
                 bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
                 bluetoothAdapter = bluetoothManager?.adapter
-
-
 
 
                 bt_bluetooth.setImageResource(R.drawable.bt_on)
@@ -932,12 +967,13 @@ class health_panel : AppCompatActivity() {
             }.start()
             write_new_file()
             dataclt = true
-
+            bt_startdatacollect.text = "停止收集"
         }
         else{
 
             if (mgatt?.device != null) mgatt?.disconnect()
             dataclt = false
+            bt_startdatacollect.text = "收集資料"
         }
 
     }

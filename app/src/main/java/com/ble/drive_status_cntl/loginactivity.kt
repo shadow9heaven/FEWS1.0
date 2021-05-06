@@ -53,6 +53,7 @@ class loginactivity : AppCompatActivity(), View.OnClickListener {
         setContentView(R.layout.activity_loginactivity)
         findID()
         commandPath = File(Environment.getStorageDirectory().absolutePath)
+
     }
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -61,6 +62,7 @@ class loginactivity : AppCompatActivity(), View.OnClickListener {
             Log.e("loginactivity ", message)
         }
         else if(requestCode==2&&resultCode == RESULT_OK){
+
             setResult(RESULT_OK, getIntent())
             finish()
         }

@@ -79,6 +79,21 @@
         app:layout_constraintVertical_bias="0.98"
         />
     <Button
+        android:id = "@+id/bt_carselect"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:text = "選擇車輛"
+        android:onClick="clickchangecar"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.02"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.25"
+        />
+    <Button
         android:id="@+id/bt_upload"
         android:layout_width="100dp"
         android:layout_height="100dp"
@@ -104,19 +119,18 @@
         android:layout_width="100dp"
         android:layout_height="100dp"
 
+        android:contextClickable="false"
         android:onClick="clickeditfile"
         android:text="編輯資料"
-        android:contextClickable="false"
-        android:visibility="invisible"
 
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintHorizontal_bias="0.499"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.762" />
+        app:layout_constraintVertical_bias="0.25" />
 
     <Button
         android:id="@+id/bt_exit"

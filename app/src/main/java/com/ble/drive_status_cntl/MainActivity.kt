@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.view.WindowManager
 import android.widget.*
 import kotlin.system.exitProcess
 
@@ -12,6 +13,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var bt_drive_panel :Button
     lateinit var bt_upload :Button
     var userName = "guest"
+    var car = "car"
 
     var ecgdatalog : ArrayList<String> = arrayListOf<String>()
     var bcgdatalog : ArrayList<String> = arrayListOf<String>()
@@ -27,7 +29,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         val intent = Intent(this, Initial::class.java)
         intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
@@ -80,28 +82,39 @@ class MainActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if(requestCode==10 && resultCode == RESULT_OK){
+        when(requestCode) {
+            10->{
+                if (resultCode == RESULT_OK) {
 
-            bcgdatalog = data?.getStringArrayListExtra("bcgdatalog")!!
-            getlog = true
-        }
-        else if(requestCode == 20 && resultCode == RESULT_OK){
-            userName = data?.getStringExtra("user")!!
+                    bcgdatalog = data?.getStringArrayListExtra("bcgdatalog")!!
+                    getlog = true
+                }
+            }
+             20->{
+                 if (resultCode == RESULT_OK) {
+                     userName = data?.getStringExtra("user")!!
 
-            Toast.makeText(this, "user:"+ userName, Toast.LENGTH_LONG).show()
-        }
-        else if (requestCode == 30)
-        {
-            if(resultCode == RESULT_OK){
+                     Toast.makeText(this, "user:" + userName, Toast.LENGTH_LONG).show()
+                 }
+             }
+            30->{
+                if (resultCode == RESULT_OK) {
+
+                } else {
+                    finish()
+                }
+            }
+            40->{
+                if (resultCode == RESULT_OK) {
+                   car = data?.getStringExtra("carname")!!
+                } else {
+
+                }
 
             }
-            else{
-                finish()
+            else->{
 
             }
-        }
-        else{
-
         }
 
     }
@@ -121,11 +134,20 @@ class MainActivity : AppCompatActivity() {
 
 
     fun clicklogout(view: View) {
-
+        userName = "guest"
+        val intent = Intent(this, Initial::class.java)
+        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        startActivityForResult(intent, 30)
     }
 
     fun clickeditfile(view: View) {
 
+    }
+
+    fun clickchangecar(view: View) {
+        val intent = Intent(this, Carinfo::class.java)
+        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        startActivityForResult(intent, 40)
     }
 
 

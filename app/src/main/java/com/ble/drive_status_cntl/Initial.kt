@@ -32,6 +32,7 @@ import org.json.JSONObject
 import org.mindrot.jbcrypt.BCrypt
 import java.io.File
 import java.lang.Exception
+import kotlin.system.exitProcess
 
 
 class Initial : AppCompatActivity() , View.OnClickListener{
@@ -43,6 +44,8 @@ class Initial : AppCompatActivity() , View.OnClickListener{
     lateinit var bt_Login:Button
     lateinit var bt_register:Button
     lateinit var bt_confirm:Button
+    lateinit var bt_exit:Button
+    lateinit var bt_guest:Button
     lateinit var sp_userlist:Spinner
     lateinit var userlist:ArrayList<String?>
     lateinit var resStr:String
@@ -53,6 +56,7 @@ class Initial : AppCompatActivity() , View.OnClickListener{
     lateinit var commandPath : File
     val filename = "emulated/0/personalFile_4_28.txt"
     @RequiresApi(Build.VERSION_CODES.R)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_initial)
@@ -96,7 +100,12 @@ class Initial : AppCompatActivity() , View.OnClickListener{
         ///Register
         bt_register=findViewById(R.id.bt_register)
         bt_register.setOnClickListener(this)
-
+        //exit
+        bt_exit=findViewById(R.id.bt_exit)
+        bt_exit.setOnClickListener(this)
+        //guest
+        bt_guest=findViewById(R.id.bt_guest_mode)
+        bt_guest.setOnClickListener(this)
     }
     override fun onClick(v: View?) {
         when(v?.id){
@@ -150,11 +159,28 @@ class Initial : AppCompatActivity() , View.OnClickListener{
                         } else {
                             getJSON(personObject)
 
+
+                            username = userlist[user]!!
+
+                            getIntent().putExtra("user", username)
+                            setResult(RESULT_OK, getIntent())
+                            finish()
                         }
                     } else {
                         Log.e("Log", "$personObject")
                     }
                 }
+            }
+            R.id.bt_guest_mode->{
+
+                getIntent().putExtra("user", "guest")
+                setResult(RESULT_OK, getIntent())
+                finish()
+
+            }
+            R.id.bt_exit->{
+                moveTaskToBack(true);
+                exitProcess(-1)
             }
         }
     }
