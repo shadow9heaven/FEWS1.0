@@ -43,6 +43,13 @@ class upload_data : AppCompatActivity() {
         tv_bcgfile = findViewById(R.id.tv_bcgfile)
 
         try{
+            if(!haveInternet()){
+                Toast.makeText(baseContext, "didn't connect to the internet", Toast.LENGTH_LONG).show()
+                finish()
+            }
+
+
+
             ecgdatalog = intent?.getStringArrayListExtra("ecgdatalog")!!
             bcgdatalog = intent?.getStringArrayListExtra("bcgdatalog")!!
 
@@ -99,6 +106,7 @@ class upload_data : AppCompatActivity() {
                 true
             }
         }
+
         return result
     }
 

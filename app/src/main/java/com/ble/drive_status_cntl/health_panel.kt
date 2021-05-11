@@ -26,6 +26,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 import com.google.gson.GsonBuilder
+import okhttp3.internal.and
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.DataOutputStream
@@ -36,13 +37,20 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.*
 import org.mindrot.jbcrypt.BCrypt
+import kotlin.experimental.and
 
 class health_panel : AppCompatActivity() {
 
-    val BCG_PACKET_SIZE = 10
-
+    val BCG_PACKET_SIZE = 6
     val BCG_SIZE = 1280
     val ECG_SIZE = 2560
+    val HR_SIZE = 1800
+    val MINUTE = 60
+    var signal_level =4  ///// BCG signal level
+    lateinit var tv_signalLV :TextView ///
+    var delta = 0/////check bcg signal level
+    var wavetune  = 1.0f
+
 
     lateinit var ib_vib :ImageButton
 
@@ -59,7 +67,6 @@ class health_panel : AppCompatActivity() {
     lateinit var tv_time :TextView
     var device_add = ""
 
-
     lateinit var device :BluetoothDevice
 
     var GV: GraphView? = null
@@ -68,12 +75,15 @@ class health_panel : AppCompatActivity() {
 
     var BCG_pc : Int =0
     var BCG_th: Int = 320
+
     var BCG_pp : List<DataPoint> = ArrayList()
+
     var hr_gv : List<DataPoint> = ArrayList()
     var re_gv : List<DataPoint> = ArrayList()
+    var ftg_gv : List<DataPoint> = ArrayList()
 
-    var draw_count = 1
-    var draw_mode  = 0
+    var hrdraw_count = 1
+    //var draw_mode  = 0
 
     var wavemode   = 0
 
@@ -84,8 +94,9 @@ class health_panel : AppCompatActivity() {
 
     var recbool = false
 
-
     var uploadcount = 0
+    var heartrate_count =0
+
 
     lateinit var plot_thread :Thread
     lateinit var write_thread :Thread
@@ -112,13 +123,13 @@ class health_panel : AppCompatActivity() {
     val UUID_SERIVCE =      "1234E001-FFFF-1234-FFFF-111122223333"
     val UUID_CHAR_ECG =     "1234E002-FFFF-1234-FFFF-111122223333"
 
-    val UUID_CHAR_TIME =    "1234E005-FFFF-1234-FFFF-111122223333"
+    //val UUID_CHAR_TIME =    "1234E005-FFFF-1234-FFFF-111122223333"
     val UUID_CHAR_COMMAND = "1234E004-FFFF-1234-FFFF-111122223333"
     val UUID_CHAR_BCG =     "1234E006-FFFF-1234-FFFF-111122223333"
 
     lateinit var biologue_service: BluetoothGattService
     lateinit var biologue_char_ecg: BluetoothGattCharacteristic
-    lateinit var biologue_char_time: BluetoothGattCharacteristic
+    //lateinit var biologue_char_time: BluetoothGattCharacteristic
     lateinit var biologue_char_command: BluetoothGattCharacteristic
     lateinit var biologue_char_bcg: BluetoothGattCharacteristic
 
@@ -136,23 +147,44 @@ class health_panel : AppCompatActivity() {
         override fun run() {
             runOnUiThread {
                 if(blecnt && dataclt){
-                    if (!hrlist.isEmpty()) {
-                        var finalhr = hrlist.average()
+                    if (!hrlist.isEmpty()  ) {
+                        //if( heartrate_count >MINUTE) {
+                            var finalhr = hrlist.average()
 
-                        hrlist.clear()
-                        if (draw_count < 300) draw_count++
-                        else {
-                            hr_gv = hr_gv.drop(1)
-                            for (r in hr_gv) r.xVal -= 1
-                        }
+                            hrlist.clear()
+                            if (hrdraw_count < HR_SIZE) hrdraw_count++
+                            else {
+                                hr_gv = hr_gv.drop(1)
+                                for (r in hr_gv) r.xVal -= 1
+                            }
+                            tv_heartrate.text = finalhr.toInt().toString()
+                            var datatmp = DataPoint(hrdraw_count, finalhr.toInt())
 
-                        tv_heartrate.text = finalhr.toInt().toString()
-                        var datatmp = DataPoint(draw_count, finalhr.toInt())
+                            hr_gv = hr_gv.plus(datatmp)
 
-                        hr_gv.plus(datatmp)
-
+                        //}
+                      //else heartrate_count ++
                     } else {
 
+                    }
+
+                    val bcg_sd = c_SD(BCG_pp)
+
+                    if(bcg_sd<1000){
+                        signal_level = 1
+                        tv_signalLV.text = "1"
+                    }
+                    else if(bcg_sd<10000){
+                        signal_level = 2
+                        tv_signalLV.text = "2"
+                    }
+                    else if(bcg_sd<100000){
+                        signal_level = 3
+                        tv_signalLV.text = "3"
+                    }
+                    else {
+                        signal_level = 4
+                        tv_signalLV.text = "4"
                     }
 
                     when(wavemode){
@@ -161,14 +193,13 @@ class health_panel : AppCompatActivity() {
                             GV?.setData(ori_gv)
                         }///////origin wave
                         1-> {
-
                             GV?.setData(hr_gv)
                         }/////heartrate
                         2->{
                             //GV?.setData(re_gv)
                         }////respritory
                         3->{
-
+                            GV?.setData(ftg_gv)
                         }
                     }/////draw graph
 
@@ -189,7 +220,6 @@ class health_panel : AppCompatActivity() {
                                 recbool = true
                                 Thread {
                                     try {
-
                                         reconn++
                                         device = bluetoothManager.getConnectedDevices(BluetoothProfile.GATT)[0]
                                         //if(device == null){}
@@ -396,7 +426,7 @@ class health_panel : AppCompatActivity() {
 
         tv_heartrate = findViewById(R.id.tv_heartrate)
         tv_time      = findViewById(R.id.tv_time)
-
+        tv_signalLV  = findViewById(R.id.tv_signalLV)
         GV           = findViewById(R.id.graph_view_BCG)
 
 
@@ -409,7 +439,10 @@ class health_panel : AppCompatActivity() {
                     9
             )
         }
+        else{
 
+
+        }
         storagePath = this.getExternalFilesDir(null)
 
         create_saving_directory()
@@ -457,9 +490,7 @@ class health_panel : AppCompatActivity() {
             //Log.e("Biologue", "Found service")
             // Get Characteristic
             biologue_char_ecg     = biologue_service.getCharacteristic(UUID.fromString(UUID_CHAR_ECG))
-            //biologue_char_time    = biologue_service.getCharacteristic(UUID.fromString(UUID_CHAR_TIME))
             biologue_char_command = biologue_service.getCharacteristic(UUID.fromString(UUID_CHAR_COMMAND))
-
             biologue_char_bcg     = biologue_service.getCharacteristic(UUID.fromString(UUID_CHAR_BCG))
 
             Log.e("serviceDiscovered", biologue_char_command.toString())
@@ -506,8 +537,6 @@ class health_panel : AppCompatActivity() {
                         //descript_write = false
                         var tmp = mgatt!!.writeDescriptor(dp)
                         Log.e("BCG", tmp.toString())
-                        //Thread.sleep(1000)
-                        //send_start()
                         //while(!descript_write){ PERMISSION_REQUEST_STORAGE = PERMISSION_REQUEST_STORAGE }
                     }
                 }
@@ -525,21 +554,17 @@ class health_panel : AppCompatActivity() {
 
             paklost = false
             var ecgData = characteristic!!.value
-            //downsample = (downsample+1 ) % 4
             if (characteristic.uuid == UUID.fromString(UUID_CHAR_ECG)){
                 var extFile = File(storagePath, "$ECG_DATA_DIRECTORY/$DefaultFileName")
-                //downsample = (downsample+1 ) % 3
                 var outdata = LongArray(65)
 
                 outdata.set(0, ((ecgData.get(0).toLong() and 0xFFL)
                         or (ecgData.get(1).toLong() and 0xFFL shl 8)
                         or (ecgData.get(2).toLong() and 0xFFL shl 16)
-                        or (ecgData.get(3).toLong() and 0xFFL shl 24)
-                        )
+                        or (ecgData.get(3).toLong() and 0xFFL shl 24))
                 )////////timestamp
 /*
                 if(ECG_pc == ECG_th){
-
                     ECG_pp = ECG_pp.drop(64)
                     ECG_pc -= 64
                 }
@@ -568,7 +593,6 @@ class health_panel : AppCompatActivity() {
                     extFile.appendText((outdata.get(0)+i-1).toString() + "\t"+ outdata.get(i).toString() +"\n")
                 }
 
-
             }
             else if(characteristic.uuid == UUID.fromString(UUID_CHAR_BCG)){
 
@@ -589,20 +613,23 @@ class health_panel : AppCompatActivity() {
                 while(j <BCG_PACKET_SIZE) {
 
                     var outdata = LongArray(11)
+
                     var nowIndex = j* 18
                     var nowIndex2 :Int
                     var nowIndex3 :Int
 
 
+                    outdata.set(0,0L)
+                    outdata.set(1,0L)
                     nowIndex += 2
                     nowIndex2 = nowIndex +1
                     nowIndex3 = nowIndex +2
 
 ///////////////////////////////PreADC
-                    var unsigned_check = ( ecgData.get(nowIndex).toLong() and 0xFFL ) or (ecgData.get(nowIndex2).toLong() and 0xFFL shl 8 ) or (ecgData.get(nowIndex3).toLong() and 0xFFL shl 16)
-                    ///if(unsigned_check>8388608) unsigned_check -= 16777216
-
-                    outdata.set(2, unsigned_check.toLong())
+                    //(ecgData[nowIndex3].toLong() and 0xFFL shl 16)
+                    var unsigned_check =  ( (ecgData[nowIndex].toLong() and 0xFFL) or(ecgData[nowIndex2].toLong()and 0xFFL shl 8) or (ecgData[nowIndex3].toLong()and 0xFFL shl 16  ) )
+                    ///if(unsigned_check>8388608) unsigned_check -= 16777215
+                    //outdata.set(2, unsigned_check)
                     if(BCG_pc<BCG_th ) {
                         BCG_pp += DataPoint((BCG_th - BCG_pc), (unsigned_check).toInt())
                         BCG_pc++
@@ -615,25 +642,25 @@ class health_panel : AppCompatActivity() {
                     //}
                     //outdata.set(2, (ecgData.get(nowIndex).toUByte().toLong() or (ecgData.get(nowIndex2).toUByte().toLong().shl(8)) or (ecgData.get(nowIndex3)).toUByte().toLong().shl(16)))
                     nowIndex +=3
-                    outdata.set(3, ecgData.get(nowIndex).toLong())///heart rate
+                    outdata.set(3, ecgData[nowIndex].toLong() )///heart rate
                     nowIndex +=1
-                    outdata.set(4, ecgData.get(nowIndex).toLong())//////Respiratory rate
+                    outdata.set(4, ecgData[nowIndex].toLong() )//////Respiratory rate
                     nowIndex +=1
-                    outdata.set(5, ecgData.get(nowIndex).toLong()/16)//////////signal_status and curve_status
+                    outdata.set(5, ecgData[nowIndex].toLong() )//////////signal_status and curve_status
                     nowIndex +=1
                     nowIndex2 = nowIndex +1
 
 
                     val hrtmp = outdata.get(3).toInt()
 
-                    if(hrtmp >40 && hrtmp <250){
+                    if(hrtmp >40 && hrtmp <200){
                             hrcnt++
                             hrtotal +=hrtmp
                     }
 
                     //var signal_status = outdata.get(5)/16
 
-                    var minus_test =(ecgData.get(nowIndex).toLong() and 0xFFL) or (ecgData.get(nowIndex2).toLong() and 0xFFL shl 8 )
+                    var minus_test = (ecgData[nowIndex].toLong() or (ecgData[nowIndex2].toLong() shl 8))
                     //if(minus_test > 32767 )minus_test -= 65536
                     outdata.set(6, minus_test)//////////ACC_x
                     //outdata.get(6)
@@ -641,26 +668,26 @@ class health_panel : AppCompatActivity() {
                     nowIndex += 2
                     nowIndex2 = nowIndex +1
 
-                    minus_test = (ecgData.get(nowIndex).toLong() and 0xFFL) or (ecgData.get(nowIndex2).toLong() and 0xFFL shl 8 )
+                    minus_test = (ecgData[nowIndex].toLong() or (ecgData[nowIndex2].toLong() shl 8))
                     //if(minus_test > 32767 )minus_test -= 65536
                     outdata.set(7, minus_test)//////////ACC_y
 
                     nowIndex += 2
                     nowIndex2 = nowIndex +1
 
-                    minus_test = (ecgData.get(nowIndex).toLong() and 0xFFL) or (ecgData.get(nowIndex2).toLong() and 0xFFL shl 8 )
+                    minus_test = (ecgData[nowIndex].toLong() or (ecgData[nowIndex2].toLong() shl 8))
                     //if(minus_test > 32767 )minus_test -= 65536
                     outdata.set(8, minus_test)//////////ACC_z
+
                     nowIndex += 2
                     nowIndex2 = nowIndex +1
                     nowIndex3 = nowIndex +2
 
 ////////////////////////////////TimeStamp
                     /* Save data */
+                    var BCGtstp = (ecgData[nowIndex].toLong() and 0xFFL or ( ecgData[nowIndex2].toLong() and 0xFFL shl 8) or (ecgData[nowIndex3].toLong() and 0xFFL shl 16))
 
-                    var BCGtstp = (ecgData.get(nowIndex).toLong() and 0xFFL) or (ecgData.get(nowIndex2).toLong() and 0xFFL shl 8) or (ecgData.get(nowIndex3).toLong() and 0xFFL shl 16)
-
-                    var originalText = BCGtstp.toString() + "," + outdata.get(2)
+                    var originalText = BCGtstp.toString() + "," + unsigned_check
                             .toString() + "," + outdata.get(6).toString() + ","
                     originalText += outdata.get(7).toString() + "," + outdata.get(8)
                             .toString() + ","
@@ -739,6 +766,23 @@ class health_panel : AppCompatActivity() {
         }
 
     }
+    fun c_SD(numArray: List<DataPoint>): Double {
+        var sum = 0.0
+        var standardDeviation = 0.0
+
+        for (num in numArray) {
+            sum += num.yVal
+        }
+
+        val mean = sum / numArray.size
+
+        for (num in numArray) {
+            standardDeviation += Math.pow(num.yVal - mean, 2.0)
+        }
+
+        return Math.sqrt(standardDeviation / 10)
+    }
+
 
     fun write_new_file(){
 
@@ -757,8 +801,8 @@ class health_panel : AppCompatActivity() {
             var extFile = File(storagePath, "$ECG_DATA_DIRECTORY/$DefaultFileName")
             var bcgFile = File(storagePath, "$ECG_DATA_DIRECTORY/$DefaultBCGName")
 
-            extFile.appendText("app_version: 0.1.0" + "\n" + "Start_Time: " + dff.format(Date()) + "\n")
-            bcgFile.appendText("app_version: 0.1.0" + "\n" + "Start_Time: " + dff.format(Date()) + "\n")
+            extFile.appendText("app_version: " + "0.1.0" + "\nStart_Time: " + dff.format(Date()) + "\n")
+            bcgFile.appendText("app_version: " + "0.1.0" + "\nStart_Time: " + dff.format(Date()) + "\n")
         }
         FinalECGname = DefaultFileName
         FinalBCGname = DefaultBCGName
@@ -774,14 +818,11 @@ class health_panel : AppCompatActivity() {
         else{
 
             if (mgatt?.device != null) {
-                //send_stop()/////stop
 
                 mgatt?.disconnect()
                 broadcastUpdate(ACTION_GATT_DISCONNECTED)
             }
-
             //if(plot_thread.isAlive)plot_thread.interrupt()
-
             blecnt = false
             bt_bluetooth.setImageResource(R.drawable.bt_off)
 
@@ -916,7 +957,6 @@ class health_panel : AppCompatActivity() {
                 //tv_name.text = response.toString()
                 reader.close()
                 //thdone = true
-
                 //var reader = conn.getInputStream();
 
                 //var str_data = convertStreamToString(reader);
@@ -929,7 +969,6 @@ class health_panel : AppCompatActivity() {
                 e.printStackTrace();
             }
         }.start()
-
 
     }
 
@@ -961,7 +1000,6 @@ class health_panel : AppCompatActivity() {
                 }
                 */
                 device = bluetoothManager.getConnectedDevices(GATT)[0]
-
                 //device = bluetoothManager.getConnectedDevices(BluetoothProfile.GATT)[0]
                 mgatt = device.connectGatt(this, false, gattCB)
             }.start()
@@ -970,13 +1008,9 @@ class health_panel : AppCompatActivity() {
             bt_startdatacollect.text = "停止收集"
         }
         else{
-
             if (mgatt?.device != null) mgatt?.disconnect()
             dataclt = false
             bt_startdatacollect.text = "收集資料"
         }
-
     }
-
-
 }

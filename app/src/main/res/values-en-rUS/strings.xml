@@ -22,18 +22,6 @@
     <string name="main_drive_test">drive test</string>
     <string name="main_upload">upload</string>
 
-    <string name="kss_1">1. Extremely alert</string>
-    <string name="kss_2">2. Very alert</string>
-    <string name="kss_3">3. Be alert</string>
-    <string name="kss_4">4. a little bit alert</string>
-    <string name="kss_5">5. normal</string>
-    <string name="kss_6">6. a little bit sleepy</string>
-    <string name="kss_7">7. sleepy but quite easy to be awake</string>
-    <string name="kss_8">8. sleepy,not easy to be awake</string>
-    <string name="kss_9">9. very sleepy</string>
-    <string name="kss_10">10. Exteremely sleepy</string>
-    <string name="kss_select">select KSS and touch screen to end the test</string>
-    <string name="kss_start"> touch screen to start the test when ready</string>
 
     <string name="ecg_button">readECG</string>
     <string name="ecg_stop_button">stopECG</string>
