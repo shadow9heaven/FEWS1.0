@@ -167,6 +167,11 @@ class Initial : AppCompatActivity() , View.OnClickListener{
                             finish()
                         }
                     } else {
+                        /////offline login
+                        username = userlist[user]!!
+                        getIntent().putExtra("user", username)
+                        setResult(RESULT_OK, getIntent())
+                        finish()
                         Log.e("Log", "$personObject")
                     }
                 }

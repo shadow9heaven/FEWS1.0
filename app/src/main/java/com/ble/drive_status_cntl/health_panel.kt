@@ -41,7 +41,7 @@ import kotlin.experimental.and
 
 class health_panel : AppCompatActivity() {
 
-    val BCG_PACKET_SIZE = 6
+    val BCG_PACKET_SIZE = 10
     val BCG_SIZE = 1280
     val ECG_SIZE = 2560
     val HR_SIZE = 1800
