@@ -42,7 +42,7 @@ class loginactivity : AppCompatActivity(), View.OnClickListener {
     var jsonObject = JSONObject()
     var numberOfReq=0
     var ispost:Boolean =false
-    var url = "http://59.120.189.128:5000/data/biologueQuery"
+    var url = "http://59.120.189.128:8081/data/biologueQuery"
     ///
     lateinit var commandPath : File
     val filename = "emulated/0/personalFile_4_28.txt"

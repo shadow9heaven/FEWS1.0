@@ -41,6 +41,7 @@ class changeuser : AppCompatActivity() {
     //lateinit var userjson :JSONArray
     var devicename: List<HashMap<String, String>> = ArrayList()
     val listlabel = arrayOf("name", "email")
+
     val listid = intArrayOf(android.R.id.text1, android.R.id.text2)
 
     override fun onCreate(savedInstanceState: Bundle?) {

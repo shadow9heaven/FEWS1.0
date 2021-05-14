@@ -26,7 +26,7 @@ class AddCarInfo : AppCompatActivity(),View.OnClickListener {
     lateinit var brand_t:String
     lateinit var message:String
     lateinit var resStr:String
-    var carinfo_url="http://59.120.189.128:5000/data/biologueData"
+    var carinfo_url="http://59.120.189.128:8081/data/biologueData"
     var tonnage=.0.toFloat()
     var vehicle_t=0
     var energy_t=0

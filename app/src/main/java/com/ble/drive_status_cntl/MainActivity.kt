@@ -13,7 +13,8 @@ class MainActivity : AppCompatActivity() {
     lateinit var bt_drive_panel :Button
     lateinit var bt_upload :Button
     var userName = "guest"
-    var car = "car"
+    var userID = "hametorigun"
+    var carid = "car"
 
     var ecgdatalog : ArrayList<String> = arrayListOf<String>()
     var bcgdatalog : ArrayList<String> = arrayListOf<String>()
@@ -57,6 +58,8 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(this, health_panel::class.java)
 
         intent.putExtra("user",userName)
+        intent.putExtra("userid",userID)
+        intent.putExtra("car" ,carid )
         intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         startActivityForResult(intent, 10)
 
@@ -94,6 +97,7 @@ class MainActivity : AppCompatActivity() {
                  if (resultCode == RESULT_OK) {
                      userName = data?.getStringExtra("user")!!
 
+
                      Toast.makeText(this, "user:" + userName, Toast.LENGTH_LONG).show()
                  }
              }
@@ -106,7 +110,7 @@ class MainActivity : AppCompatActivity() {
             }
             40->{
                 if (resultCode == RESULT_OK) {
-                   car = data?.getStringExtra("carname")!!
+                   carid = data?.getStringExtra("carname")!!
                 } else {
 
                 }

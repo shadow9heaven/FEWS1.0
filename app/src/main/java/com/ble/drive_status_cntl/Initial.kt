@@ -50,7 +50,7 @@ class Initial : AppCompatActivity() , View.OnClickListener{
     lateinit var userlist:ArrayList<String?>
     lateinit var resStr:String
     var user=0
-    var url = "http://59.120.189.128:5000/data/biologueQuery"
+    var url = "http://59.120.189.128:8081/data/biologueQuery"
     var timerHandler2: Handler? = Handler()
     ////load file
     lateinit var commandPath : File

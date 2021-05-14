@@ -49,15 +49,18 @@ class personInfo : AppCompatActivity(),View.OnClickListener{
     var istest:Boolean=false
     var ispost:Boolean =false
     var status:Boolean=false
-    val rigester_url = "http://59.120.189.128:5000/data/biologueData"
-    var ckeck_url="http://59.120.189.128:5000/data/biologueQuery"
+    val rigester_url = "http://59.120.189.128:8081/data/biologueData"
+    var ckeck_url="http://59.120.189.128:8081/data/biologueQuery"
     ////personal file
     lateinit var commandPath : File
     val filename = "emulated/0/personalFile_4_28.txt"
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_person_info)
+        Log.e("register","3")
+
         status=intent.getBooleanExtra("status",false)
         findID()
         birth_spin()

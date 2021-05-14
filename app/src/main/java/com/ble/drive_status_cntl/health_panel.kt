@@ -25,8 +25,11 @@ import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.*
 
-import com.google.gson.GsonBuilder
-import okhttp3.internal.and
+
+import okhttp3.internal.notify
+import okhttp3.internal.wait
+import org.json.JSONArray
+
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.DataOutputStream
@@ -37,20 +40,45 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.*
 import org.mindrot.jbcrypt.BCrypt
+
+import kotlin.collections.ArrayList
 import kotlin.experimental.and
+
+
 
 class health_panel : AppCompatActivity() {
 
-    val BCG_PACKET_SIZE = 10
-    val BCG_SIZE = 1280
-    val ECG_SIZE = 2560
+    val BCG_PACKET_SIZE = 6
+
+    val BCG_SIZE = 15360
+    val ECG_SIZE =  7680
+
     val HR_SIZE = 1800
-    val MINUTE = 60
+    val MINITE = 60
+
+    val UPLOAD_TIME = 60
+
+
     var signal_level =4  ///// BCG signal level
     lateinit var tv_signalLV :TextView ///
+
     var delta = 0/////check bcg signal level
     var wavetune  = 1.0f
 
+   // var alg_buffer : List<alg> = ArrayList()
+    var ets_array : List<Int> = ArrayList()
+    var ecg_array : List<Int> = ArrayList()
+
+    var bts_array : List<Int> = ArrayList()
+    var bcg_array : List<Int> = ArrayList()
+    var acx_array : List<Int> = ArrayList()
+    var acy_array : List<Int> = ArrayList()
+    var acz_array : List<Int> = ArrayList()
+    var hr_array : List<Int> = ArrayList()
+    var res_array : List<Int> = ArrayList()
+    var confidence_array : List<Int> = ArrayList()
+
+    var jsonreturn = ""
 
     lateinit var ib_vib :ImageButton
 
@@ -58,12 +86,9 @@ class health_panel : AppCompatActivity() {
     var viblevel = 0
     lateinit var bt_startdatacollect :Button
 
-    val UPLOAD_TIME = 300
-
     lateinit var bt_autoup :Button
     var autoup = false
 
-    var jsonObject = JSONObject()
     lateinit var tv_time :TextView
     var device_add = ""
 
@@ -74,7 +99,7 @@ class health_panel : AppCompatActivity() {
     lateinit var bt_waveform :Button
 
     var BCG_pc : Int =0
-    var BCG_th: Int = 320
+    var BCG_th: Int = 2560
 
     var BCG_pp : List<DataPoint> = ArrayList()
 
@@ -95,11 +120,9 @@ class health_panel : AppCompatActivity() {
     var recbool = false
 
     var uploadcount = 0
-    var heartrate_count =0
+    var data_count =0
 
-
-    lateinit var plot_thread :Thread
-    lateinit var write_thread :Thread
+    lateinit var fetchthread :Thread
 
     lateinit var sp_fatigue : SoundPool
     var dataclt = false
@@ -108,9 +131,13 @@ class health_panel : AppCompatActivity() {
 
     var ECG_DATA_DIRECTORY = "ECG_DATA"
     var user = "guest"
+    var userID = "hametorigun"
+    var carid = "car"
+    var swversion = BuildConfig.VERSION_NAME
+    var hwversion = "SMART_SEAT1.3"
 
     val ACTION_GATT_DISCONNECTED = "com.example.bluetooth.le.ACTION_GATT_DISCONNECTED"
-    val url = "http://59.120.189.128:5000/data/biologueData"
+    val url = "http://59.120.189.128:8081/data/biologueData"
 
 
     private lateinit var bluetoothManager : BluetoothManager
@@ -143,6 +170,7 @@ class health_panel : AppCompatActivity() {
     var FinalBCGname : String = ""
 
     var hrhandle = Handler()
+
     private val timerRunnable2: Runnable = object : Runnable {
         override fun run() {
             runOnUiThread {
@@ -160,13 +188,14 @@ class health_panel : AppCompatActivity() {
                             tv_heartrate.text = finalhr.toInt().toString()
                             var datatmp = DataPoint(hrdraw_count, finalhr.toInt())
 
-                            hr_gv = hr_gv.plus(datatmp)
+                            hr_gv += datatmp
 
                         //}
                       //else heartrate_count ++
                     } else {
 
                     }
+
 
                     val bcg_sd = c_SD(BCG_pp)
 
@@ -271,110 +300,90 @@ class health_panel : AppCompatActivity() {
 
 /////////////////upload data to database
                         Thread{
-                        var upload_ECG = File(storagePath, "$ECG_DATA_DIRECTORY/$DefaultFileName")
-                        var upload_BCG = File(storagePath, "$ECG_DATA_DIRECTORY/$DefaultBCGName")
 
-                        write_new_file()
-                        ////////unparse
+                            var algObject = JSONObject()
+                            var bcgObject = JSONObject()
+                            var ecgObject = JSONObject()
 
-                        var bcgcount =0
-                        var bcgbuffer = arrayListOf<Int>()
-                        var bcg_timestampST =0
-                        var bcg_timestampEND =0
+                            var curr_time = Date().time
+                            //System.currentTimeMillis()
 
-                        var ecgcount =0
-                        var ecgbuffer = arrayListOf<Int>()
-                        var ecg_timestampST =0
-                        var ecg_timestampEND =0
+                            val bcg_timestampS = bts_array[0]
+                            val ecg_timestampS = ets_array[0]
+                            val bcg_timestampED = bts_array[bcg_array.size -1]
+                            val ecg_timestampED = ets_array[ecg_array.size -1]
+
+                            var status_buffer : List<Int> = ArrayList()
 
 
-                        upload_BCG.forEachLine {
-                            var tmp = it.split(" ")
-                                when(tmp[0]){
-                                    "app_version:"->{}
-                                    "Start_Time:"->{}
-                                    else->{
-                                        if(bcgcount==0){
-                                            bcg_timestampST = tmp[0].toInt()
-                                        }
-                                        else if (bcgcount == BCG_SIZE){
-                                            bcg_timestampEND = tmp[0].toInt()
-                                        }
+                            ets_array = ets_array.drop(8000)
+                            ecg_array = ecg_array.drop(8000)
 
-                                        bcgbuffer.add(tmp[1].toInt())
+                            bcg_array = bcg_array.drop(16000)
+                            acx_array = acx_array.drop(16000)
+                            acy_array = acy_array.drop(16000)
+                            acz_array = acz_array.drop(16000)
+                            hr_array  = hr_array.drop(16000)
+                            res_array = res_array.drop(16000)
 
-                                        if(bcgcount == BCG_SIZE){
-                                               var bcgObject = JSONObject()
-                                                bcgObject.put("post_t", 3)
-                                                bcgObject.put("bcg",bcgbuffer)
-                                                bcgObject.put("acc",1)
-                                            //////acc x or y or z?
-                                                //jsonObject.put("acc",tmp[])
-                                            /////acc x or y or z
-                                                //jsonObject.put("id",BCG_Algo_ID)
+                            ////////algo
+                            algObject.put("post_t", 2)
+                            algObject.put("userid",userID)
+                            algObject.put("carid",carid)
+                            algObject.put("hwversion",hwversion)
+                            algObject.put("swversion",swversion)
+                            algObject.put("timestamp",curr_time)
+                            algObject.put("timestampm",bcg_timestampS)
+                            algObject.put("fatigue", 1)
+                            algObject.put("hr",JSONArray(hr_array))
+                            algObject.put("confidence",JSONArray(confidence_array))
+                            algObject.put("resp",JSONArray(res_array))
+                            algObject.put("status",status_buffer)
 
-                                                bcgObject.put("id_len",2)
-                                                bcgObject.put("timestamp",Date().time)
+                            fetchJSON(algObject)
 
-                                                bcgObject.put("device_t",device_add)
-                                                bcgObject.put("BCGID",1)
-                                                bcgObject.put("data_len",BCG_SIZE)
-                                                //jsonObject.put("id")
-                                                bcgObject.put("timestampST",bcg_timestampST)
-                                                bcgObject.put("timestampEND",bcg_timestampEND)
-
-                                            fetchJSON()
-
-                                                bcgbuffer.clear()
-                                                bcgcount = 0
-                                                bcg_timestampST = 0
-                                                bcg_timestampEND =0
-                                        }////upload the packet
-                                        else bcgcount++
-                                    }
-                                }
+                            synchronized(fetchthread) {
+                                fetchthread.wait();
                             }
-
-                        upload_ECG.forEachLine {
-                            var tmp = it.split(" ")
-                            when(tmp[0]){
-                                "app_version:"->{}
-                                "Start_Time:"->{}
-                                else->{
-                                    if(ecgcount == 0) {
-                                        ecg_timestampST = tmp[0].toInt()
-                                    }
-                                    else if(ecgcount == ECG_SIZE){
-                                        ecg_timestampEND = tmp[0].toInt()
-                                    }
-                                    ecgbuffer.add(tmp[1].toInt())
-                                    if(ecgcount == ECG_SIZE){
-                                        var ecgObject = JSONObject()
-                                        ecgObject.put("post_t", 4)/////string
-                                        ecgObject.put("ecg",ecgbuffer)
-                                        ecgObject.put("data_len",ECG_SIZE)
-                                        //ecgObject.put("id",ECG_Algo_ID)
-                                        ecgObject.put("id_len",2)
-                                        ecgObject.put("timestampST",ecg_timestampST)
-                                        ecgObject.put("timestampEND",ecg_timestampEND)
-                                        ecgObject.put("timestamp",Date().time)
-
-                                        fetchJSON()
-
-                                        ecgbuffer.clear()
-                                        ecgcount = 0
-                                        ecg_timestampST = 0
-                                        ecg_timestampEND =0
-
-                                    }
+                            val algID = jsonreturn
 
 
-                                }
+                            //////ecg
+                            ecgObject.put("post_t", 4)
+                            ecgObject.put("ecg",JSONArray(ecg_array))
+                            ecgObject.put("datalen",2)
+                            ecgObject.put("hwversion",2)
+                            ecgObject.put("algoidlist",algID)
+                            ecgObject.put("algoidlistlen",1)
+                            ecgObject.put("timestampst",ecg_timestampS)
+                            ecgObject.put("timestampend",ecg_timestampED)
+                            ecgObject.put("timestamp",curr_time)
+                            fetchJSON(ecgObject)
+
+
+                            synchronized(fetchthread) {
+                                fetchthread.wait();
                             }
-                        }
-                        ///////unparse
+                            val ecgID = jsonreturn
+
+                            //////bcg
+                            bcgObject.put("post_t", 3)
+                            bcgObject.put("bcg",JSONArray(bcg_array))
+                            bcgObject.put("accx",JSONArray(acx_array))
+                            bcgObject.put("accy",JSONArray(acy_array))
+                            bcgObject.put("accz",JSONArray(acz_array))
+                            bcgObject.put("device",1)
+                            bcgObject.put("ecgidlist",ecgID)
+                            bcgObject.put("datalen",1)
+                            bcgObject.put("algoidlist",algID)
+                            bcgObject.put("algoidlistlen",1)
+                            bcgObject.put("timestampst",bcg_timestampS)
+                            bcgObject.put("timestampend",bcg_timestampED)
+                            bcgObject.put("timestamp",curr_time)
+                            fetchJSON(bcgObject)
+
+
 /////////////////upload data to database
-
                         }.start()
                     }//////upload
                     else{
@@ -407,6 +416,8 @@ class health_panel : AppCompatActivity() {
 
         try{
             user  = intent?.getStringExtra("user")!!
+            carid = intent?.getStringExtra("car")!!
+            userID = intent?.getStringExtra("userid")!!
             //ECG_DATA_DIRECTORY = user
         }
         catch (e :Exception){
@@ -441,7 +452,6 @@ class health_panel : AppCompatActivity() {
         }
         else{
 
-
         }
         storagePath = this.getExternalFilesDir(null)
 
@@ -449,10 +459,8 @@ class health_panel : AppCompatActivity() {
 
     }
     fun create_saving_directory() {
-
         var dataDir = File(storagePath, ECG_DATA_DIRECTORY)
         if(dataDir.mkdirs())Log.e("mkdir", dataDir.toString())
-
     }
 
 
@@ -463,7 +471,6 @@ class health_panel : AppCompatActivity() {
                 newState: Int
         ) {
             Log.e("onConnectStateChange", newState.toString())
-
             if(newState == 0 || newState == 3){
 
                 Toast.makeText(baseContext, "disconnected!!", Toast.LENGTH_LONG).show()
@@ -487,7 +494,6 @@ class health_panel : AppCompatActivity() {
 
             biologue_service = gatt!!.getService(UUID.fromString(UUID_SERIVCE))
 
-            //Log.e("Biologue", "Found service")
             // Get Characteristic
             biologue_char_ecg     = biologue_service.getCharacteristic(UUID.fromString(UUID_CHAR_ECG))
             biologue_char_command = biologue_service.getCharacteristic(UUID.fromString(UUID_CHAR_COMMAND))
@@ -591,6 +597,19 @@ class health_panel : AppCompatActivity() {
 
                 for(i in 1..64) {
                     extFile.appendText((outdata.get(0)+i-1).toString() + "\t"+ outdata.get(i).toString() +"\n")
+                    if(ecg_array.size >= ECG_SIZE) {
+                        ets_array.drop(256)
+                        ecg_array.drop(256)
+
+
+                        ets_array += (outdata.get(0) + i - 1).toInt()
+                        ecg_array +=  outdata.get(i).toInt()
+
+                    }
+                    else{
+                        ets_array += (outdata.get(0) + i - 1).toInt()
+                        ecg_array +=  outdata.get(i).toInt()
+                    }
                 }
 
             }
@@ -600,7 +619,6 @@ class health_panel : AppCompatActivity() {
                 var j = 0
                 var hrtotal = 0
                 var hrcnt =0
-
 
                 if(BCG_pc == BCG_th){
 
@@ -682,9 +700,12 @@ class health_panel : AppCompatActivity() {
                     nowIndex += 2
                     nowIndex2 = nowIndex +1
                     nowIndex3 = nowIndex +2
-
 ////////////////////////////////TimeStamp
+
+
+
                     /* Save data */
+
                     var BCGtstp = (ecgData[nowIndex].toLong() and 0xFFL or ( ecgData[nowIndex2].toLong() and 0xFFL shl 8) or (ecgData[nowIndex3].toLong() and 0xFFL shl 16))
 
                     var originalText = BCGtstp.toString() + "," + unsigned_check
@@ -696,6 +717,45 @@ class health_panel : AppCompatActivity() {
 
                     bcgFile.appendText(originalText)
                     //prev_ts = BCGtstp
+
+                    //var algtmp  = alg(BCGtstp,outdata.get(3).toInt(),1,outdata.get(4).toInt(),outdata.get(5).toInt())
+                    //bts_buffer = bts_buffer.plus(BCGtstp)
+                    //hr_buffer = hr_buffer.plus(outdata.get(3).toInt())
+                    //resp_buffer = resp_buffer.plus(outdata.get(4).toInt())
+                    //status_buffer = status_buffer.plus(outdata.get(5).toInt())
+                    //confidence_buffer = confidence_buffer.plus(1)
+
+                    //bcg_buffer = bcg_buffer.plus(unsigned_check.toInt())
+
+                    //val bcgtmp = BCG(BCGtstp.toInt(),unsigned_check.toInt(),outdata[6].toInt(),outdata[7].toInt(),outdata[8].toInt(),outdata[3].toInt(),outdata[4].toInt())
+
+                    if(bcg_array.size >=  BCG_SIZE) {
+                        bts_array.drop(512)
+                        bcg_array.drop(512)
+                        acx_array.drop(512)
+                        acy_array.drop(512)
+                        acz_array.drop(512)
+                        hr_array.drop(512)
+                        res_array.drop(512)
+
+                        bts_array += BCGtstp.toInt()
+                        bcg_array += unsigned_check.toInt()
+                        acx_array += outdata[6].toInt()
+                        acy_array += outdata[7].toInt()
+                        acz_array += outdata[8].toInt()
+                        hr_array  += outdata[3].toInt()
+                        res_array += outdata[4].toInt()
+                    }
+                    else{
+                        bts_array += BCGtstp.toInt()
+                        bcg_array += unsigned_check.toInt()
+                        acx_array += outdata[6].toInt()
+                        acy_array += outdata[7].toInt()
+                        acz_array += outdata[8].toInt()
+                        hr_array  += outdata[3].toInt()
+                        res_array += outdata[4].toInt()
+
+                    }
                     j+=1
                 }///////write bcg parced data
                 if(hrcnt>0){
@@ -801,8 +861,8 @@ class health_panel : AppCompatActivity() {
             var extFile = File(storagePath, "$ECG_DATA_DIRECTORY/$DefaultFileName")
             var bcgFile = File(storagePath, "$ECG_DATA_DIRECTORY/$DefaultBCGName")
 
-            extFile.appendText("app_version: " + "0.1.0" + "\nStart_Time: " + dff.format(Date()) + "\n")
-            bcgFile.appendText("app_version: " + "0.1.0" + "\nStart_Time: " + dff.format(Date()) + "\n")
+            extFile.appendText("app_version: " + swversion + "\nStart_Time: " + dff.format(Date()) + "\n")
+            bcgFile.appendText("app_version: " + swversion + "\nStart_Time: " + dff.format(Date()) + "\n")
         }
         FinalECGname = DefaultFileName
         FinalBCGname = DefaultBCGName
@@ -900,76 +960,79 @@ class health_panel : AppCompatActivity() {
 
     }
 
-    fun fetchJSON(){
-        Thread{
-            try {
-                ///////private String url1 = "http://api.openweathermap.org/data/2.5/weather?q=";
-                //val url = "http://my-json-feed"
-                //car_plate = et_input?.text.toString()
-                //timestamp = "1614787600"
-                // heart_rate = 85
-                //var realurl = url + "=" + car_plate
-                val response = StringBuilder()
+    fun fetchJSON(jsonObject: JSONObject){
+        fetchthread =  Thread{
+            synchronized(this) {
+                try {
+                    ///////private String url1 = "http://api.openweathermap.org/data/2.5/weather?q=";
+                    //val url = "http://my-json-feed"
+                    //car_plate = et_input?.text.toString()
+                    //timestamp = "1614787600"
+                    // heart_rate = 85
+                    //var realurl = url + "=" + car_plate
+                    val response = StringBuilder()
 
-                var realurl = url
+                    var realurl = url
 
-                var testurl = ""
+                    Log.e("url", realurl)
+                    //tv_timestamp.text = testurl
+                    var sess = URL(realurl);
+                    var conn = sess.openConnection() as HttpURLConnection;
 
-                Log.e("url", realurl)
-                //tv_timestamp.text = testurl
-                var sess= URL(realurl);
-                var conn = sess.openConnection() as HttpURLConnection;
+                    conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+                    conn.setRequestProperty("Accept", "application/json");
+                    conn.setRequestMethod("POST");
 
-                conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
-                conn.setRequestProperty("Accept", "application/json");
-                conn.setRequestMethod("POST");
+                    conn.setConnectTimeout(10000);
+                    conn.setReadTimeout(10000);
+                    conn.setDoInput(true);
+                    conn.setDoOutput(true);
+                    conn.setUseCaches(false);
 
-                conn.setConnectTimeout(10000);
-                conn.setReadTimeout(10000);
-                conn.setDoInput(true);
-                conn.setDoOutput(true);
-                conn.setUseCaches(false);
+                    conn.connect();
 
-                conn.connect();
+                    val os = conn.outputStream
+                    val writer = DataOutputStream(os)
+                    val jsonString: String = jsonObject.toString()
+                    //writer.writeBytes(jsonString)
+                    Log.e("jsonString", jsonString)
 
-                val os = conn.outputStream
-                val writer = DataOutputStream(os)
-                val jsonString: String = jsonObject.toString()
-                //writer.writeBytes(jsonString)
-                Log.e("jsonString", jsonString)
+                    writer.writeBytes(jsonString);
 
-                writer.writeBytes(jsonString);
+                    writer.flush()
+                    writer.close()
 
-                writer.flush()
-                writer.close()
+                    val `is` = conn.inputStream
 
-                val `is` = conn.inputStream
+                    val reader = BufferedReader(InputStreamReader(`is`))
 
-                val reader = BufferedReader(InputStreamReader(`is`))
+                    var line: String?
 
-                var line: String?
+                    while (reader.readLine().also { line = it } != null) {
+                        //tmp += line
+                        response.append(line)
+                        response.append('\r')
+                    }
+                    jsonreturn = response.toString()
+                    //tv_name.text = response.toString()
+                    reader.close()
+                    //thdone = true
+                    //var reader = conn.getInputStream();
 
-                while (reader.readLine().also { line = it } != null) {
-                    //tmp += line
-                    response.append(line)
-                    response.append('\r')
+                    //var str_data = convertStreamToString(reader);
+                    //readAndParseJSON(str_data);
+
+                    //stream.close();
+                    os.close()
+
+                } catch (e: Exception) {
+                    e.printStackTrace();
                 }
-                //tv_name.text = response.toString()
-                reader.close()
-                //thdone = true
-                //var reader = conn.getInputStream();
-
-                //var str_data = convertStreamToString(reader);
-                //readAndParseJSON(str_data);
-
-                //stream.close();
-                os.close()
-
-            }catch (e: Exception) {
-                e.printStackTrace();
+                notify()
             }
-        }.start()
-
+        }
+        fetchthread.start()
+        //return line
     }
 
     fun clickvib(view: View) {
@@ -991,14 +1054,7 @@ class health_panel : AppCompatActivity() {
     fun clickdata(view: View) {
         if(!dataclt) {
             Thread {
-                //var dev_ind =0
-                /*
-                for (r in bluetoothManager.getConnectedDevices(BluetoothProfile.GATT)) {
-                    if (r.address == device_add) {
-                        device = r
-                    }
-                }
-                */
+
                 device = bluetoothManager.getConnectedDevices(GATT)[0]
                 //device = bluetoothManager.getConnectedDevices(BluetoothProfile.GATT)[0]
                 mgatt = device.connectGatt(this, false, gattCB)

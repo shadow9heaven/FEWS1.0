@@ -39,16 +39,18 @@ class Register : AppCompatActivity(), View.OnClickListener{
     var timestamp:Long=0L
     var numberOfReq=0
     var ispost:Boolean =false
-    var ckeck_url="http://59.120.189.128:5000/data/biologueQuery"
+    var ckeck_url="http://59.120.189.128:8081/data/biologueQuery"
     val regex_name=Regex("[A-Za-z0-9_.-]{1,32}")
     val regex_email=Regex("[a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\\.[a-zA-Z.]{2,18}")
     val regex_password=Regex("[A-Za-z0-9_.-]{1,32}")
-    val rigester_url = "http://59.120.189.128:5000/data/biologueData"
+    val rigester_url = "http://59.120.189.128:8081/data/biologueData"
     ////personal file
     lateinit var commandPath : File
     val filename = "emulated/0/personalFile_4_28.txt"
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreate(savedInstanceState: Bundle?) {
+        Log.e("register","2")
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register)
         findID()
