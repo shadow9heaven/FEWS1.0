@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+
+    android:scrollbarStyle="outsideOverlay"
+    android:layout_height="fill_parent"
+    android:layout_width="fill_parent"
+    android:fillViewport = "true"
+    >
+<androidx.constraintlayout.widget.ConstraintLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".personInfo">
@@ -35,7 +43,7 @@
         tools:layout_editor_absoluteX="0dp"
         tools:layout_editor_absoluteY="0dp">
         <LinearLayout
-            android:id="@+id/ll_nickname"
+            android:id="@+id/ll_username"
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:layout_marginLeft="20dp"
@@ -48,15 +56,15 @@
             app:layout_constraintTop_toTopOf="@id/parent">
 
             <TextView
-                android:id="@+id/signnickname"
+                android:id="@+id/signusername"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="Nickname"
+                android:text="Username"
                 android:textSize="24sp" />
 
             <EditText
-                android:id="@+id/ed_nickname"
+                android:id="@+id/ed_username"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -75,7 +83,7 @@
             android:orientation="horizontal"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="@id/ll_nickname">
+            app:layout_constraintTop_toTopOf="@id/ll_username">
 
             <TextView
                 android:id="@+id/signheight"
@@ -91,7 +99,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:ems="10"
-                android:inputType="numberDecimal" />
+                android:inputType="number" />
 
         </LinearLayout>
         <LinearLayout
@@ -120,7 +128,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:ems="10"
-                android:inputType="numberDecimal" />
+                android:inputType="number" />
 
         </LinearLayout>
         <LinearLayout
@@ -182,7 +190,7 @@
         <LinearLayout
             android:id="@+id/ll_Disease"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
+            android:layout_height="wrap_content"
             android:layout_marginLeft="20dp"
             android:layout_marginTop="20dp"
             android:layout_marginRight="20dp"
@@ -196,21 +204,40 @@
                 android:id="@+id/signDisease"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
+                android:layout_marginRight="50dp"
                 android:layout_weight="1"
                 android:text="Disease"
                 android:textSize="24sp" />
 
-            <Spinner
-                android:id="@+id/sp_Disease"
+            <LinearLayout
+                android:id="@+id/ll_cb_disease"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1" />
+                android:gravity="center"
+                android:layout_marginRight="50dp"
+                android:orientation="vertical"
+                app:layout_constraintRight_toRightOf="parent">
+
+                <CheckBox
+                    android:id="@+id/cb_heartdisease"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Heart Disease"
+                    android:gravity="center"
+                    />
+                <CheckBox
+                    android:id="@+id/cb_hypertension"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Hypertension"
+                    android:gravity="center" />
+            </LinearLayout>
 
         </LinearLayout>
         <LinearLayout
             android:id="@+id/ll_License"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
+            android:layout_height="wrap_content"
             android:layout_marginLeft="20dp"
             android:layout_marginTop="20dp"
             android:layout_marginRight="20dp"
@@ -225,22 +252,45 @@
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
+                android:layout_marginRight="90dp"
                 android:text="License"
                 android:textSize="24sp" />
 
-            <Spinner
-                android:id="@+id/sp_License"
+            <LinearLayout
+                android:id="@+id/ll_cb_license"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1" />
+                android:layout_marginRight="90dp"
+                android:gravity="center"
+                android:orientation="vertical"
+                app:layout_constraintRight_toRightOf="parent">
 
+                <CheckBox
+                    android:id="@+id/cb_scooter"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Scooter"
+                    android:gravity="center" />
+                <CheckBox
+                    android:id="@+id/cb_car"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Car"
+                    android:gravity="center" />
+                <CheckBox
+                    android:id="@+id/cb_truck"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Truck"
+                    android:gravity="center" />
+            </LinearLayout>
         </LinearLayout>
         <LinearLayout
             android:id="@+id/ll_button"
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:layout_marginLeft="40dp"
-            android:layout_marginTop="70dp"
+            android:layout_marginTop="20dp"
             android:layout_marginRight="40dp"
             android:gravity="center"
             android:orientation="horizontal"
@@ -266,3 +316,4 @@
 
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

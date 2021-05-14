@@ -64,8 +64,8 @@ class Carinfo : AppCompatActivity() {
     private var Car_List = HashMap<String, String>()
     lateinit var swipeToRefresh: SwipeRefreshLayout
     var numberOfReq=0
-    val check_url="http://59.120.189.128:5000/data/biologueQuery"
-    val test_url="http://59.120.189.128:5000/data/biologueData"
+    val check_url="http://59.120.189.128:8081/data/biologueQuery"
+    val test_url="http://59.120.189.128:8081/data/biologueData"
     var ispost=false
     // Define the ECG and BCG sampling rate
     val ECG_FS = 128

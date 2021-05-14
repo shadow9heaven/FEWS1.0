@@ -54,7 +54,8 @@
             android:theme="@style/Theme.Login.AppBarOverlay" />
         <activity
             android:name=".loginactivity"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Login.AppBarOverlay" />
         <activity
             android:name=".changeuser"
             android:noHistory="true"
