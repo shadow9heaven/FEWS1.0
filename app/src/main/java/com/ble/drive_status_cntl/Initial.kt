@@ -347,6 +347,10 @@ class Initial : AppCompatActivity() , View.OnClickListener{
                 startActivityForResult(intent, 2)
             })
             .setNegativeButton("No", DialogInterface.OnClickListener { dialogInterface, i ->
+                username = userlist[user]!!
+                getIntent().putExtra("user", username)
+                setResult(RESULT_OK, getIntent())
+                finish()
                 Log.e("Log", "$personObject")
             })
             .setCancelable(false)
