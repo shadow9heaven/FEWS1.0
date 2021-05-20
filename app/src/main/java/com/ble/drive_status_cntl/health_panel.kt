@@ -40,24 +40,26 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.*
 import org.mindrot.jbcrypt.BCrypt
+import java.sql.Time
 
 import kotlin.collections.ArrayList
 import kotlin.experimental.and
-
+import java.lang.Thread.sleep as sleep
 
 
 class health_panel : AppCompatActivity() {
 
     val BCG_PACKET_SIZE = 6
 
-    val BCG_SIZE = 15360
-    val ECG_SIZE =  7680
+    val BCG_SIZE = 64 * 60
+    val ECG_SIZE = 128 * 60
 
     val HR_SIZE = 1800
-    val MINITE = 60
 
-    val UPLOAD_TIME = 60
+    //val MINITE = 60
 
+    //val UPLOAD_TIME = 60
+     var curr_time = 0L
 
     var signal_level =4  ///// BCG signal level
     lateinit var tv_signalLV :TextView ///
@@ -66,18 +68,55 @@ class health_panel : AppCompatActivity() {
     var wavetune  = 1.0f
 
    // var alg_buffer : List<alg> = ArrayList()
-    var ets_array : List<Int> = ArrayList()
+    //var ets_array : List<Int> = ArrayList()
+
+
+    var newets = -1
+    var ets = -1
     var ecg_array : List<Int> = ArrayList()
 
-    var bts_array : List<Int> = ArrayList()
+    var newbts = -1
+    var bts = -1
+    //var bts_array : List<Int> = ArrayList()
     var bcg_array : List<Int> = ArrayList()
     var acx_array : List<Int> = ArrayList()
     var acy_array : List<Int> = ArrayList()
     var acz_array : List<Int> = ArrayList()
     var hr_array : List<Int> = ArrayList()
     var res_array : List<Int> = ArrayList()
+    var status_array : List<Int> = ArrayList()
     var confidence_array : List<Int> = ArrayList()
 
+    lateinit var hr_buffer :JSONArray
+    lateinit var res_buffer :JSONArray
+    lateinit var status_buffer :JSONArray
+    lateinit var ecg_buffer :JSONArray
+    lateinit var bcg_buffer :JSONArray
+    lateinit var acx_buffer :JSONArray
+    lateinit var acy_buffer :JSONArray
+    lateinit var acz_buffer :JSONArray
+
+    var bcgok = false
+    var ecgok = false
+    /*
+    val bcg_timestampS = bts_array[0]
+    val ecg_timestampS = ets_array[0]
+    val bcg_timestampED = bcg_timestampS + bts_array.size - 1
+    val ecg_timestampED = ecg_timestampS + ets_array.size -1
+
+    var hr_buffer = JSONArray(hr_array)
+    var res_buffer = JSONArray(res_array)
+    var status_buffer = JSONArray(status_array)
+    var ecg_buffer = JSONArray(ecg_array)
+    var bcg_buffer = JSONArray(bcg_array)
+    var acx_buffer = JSONArray(acx_array)
+    var acy_buffer = JSONArray(acy_array)
+    var acz_buffer = JSONArray(acz_array)
+*/
+
+    var algObject = JSONObject()
+    var bcgObject = JSONObject()
+    var ecgObject = JSONObject()
     var jsonreturn = ""
 
     lateinit var ib_vib :ImageButton
@@ -88,6 +127,7 @@ class health_panel : AppCompatActivity() {
 
     lateinit var bt_autoup :Button
     var autoup = false
+    var uploadbool = false
 
     lateinit var tv_time :TextView
     var device_add = ""
@@ -104,7 +144,8 @@ class health_panel : AppCompatActivity() {
     var BCG_pp : List<DataPoint> = ArrayList()
 
     var hr_gv : List<DataPoint> = ArrayList()
-    var re_gv : List<DataPoint> = ArrayList()
+    var hrlist  = arrayListOf<Int>()
+
     var ftg_gv : List<DataPoint> = ArrayList()
 
     var hrdraw_count = 1
@@ -116,6 +157,7 @@ class health_panel : AppCompatActivity() {
     var conncount  = 0
     var reconn = 0
     val RECON_DURA = 3
+
 
     var recbool = false
 
@@ -143,7 +185,6 @@ class health_panel : AppCompatActivity() {
     private lateinit var bluetoothManager : BluetoothManager
     private lateinit var bluetoothAdapter : BluetoothAdapter
 
-    var hrlist  = arrayListOf<Int>()
     var ecgdatalog = arrayListOf<String>()
     var bcgdatalog = arrayListOf<String>()
 
@@ -171,9 +212,13 @@ class health_panel : AppCompatActivity() {
 
     var hrhandle = Handler()
 
+    lateinit var upload_thread : Thread
+
     private val timerRunnable2: Runnable = object : Runnable {
         override fun run() {
             runOnUiThread {
+
+
                 if(blecnt && dataclt){
                     if (!hrlist.isEmpty()  ) {
                         //if( heartrate_count >MINUTE) {
@@ -253,7 +298,7 @@ class health_panel : AppCompatActivity() {
                                         device = bluetoothManager.getConnectedDevices(BluetoothProfile.GATT)[0]
                                         //if(device == null){}
                                         mgatt = device.connectGatt(this@health_panel, false, gattCB)
-                                        Thread.sleep(1000)
+                                        sleep(1000)
                                         //send_start()
                                         if(bluetoothManager.getConnectionState(device, GATT) == 1 ||
                                             bluetoothManager.getConnectionState(device, GATT) == 2){
@@ -291,41 +336,23 @@ class health_panel : AppCompatActivity() {
                         paklost = true
                     }////packlost
 
-                    if(uploadcount < UPLOAD_TIME){
-                        uploadcount ++
-                    }
-                    else if(autoup){
-                        //autoup = false
-                        uploadcount =0
+                    if(autoup && ecgok && bcgok){
+                        ecgok = false
+                        bcgok = false
+
+                        //uploadcount =0
 
 /////////////////upload data to database
-                        Thread{
+                        upload_thread = Thread{
+                            algObject = JSONObject()
+                            bcgObject = JSONObject()
+                            ecgObject = JSONObject()
 
-                            var algObject = JSONObject()
-                            var bcgObject = JSONObject()
-                            var ecgObject = JSONObject()
 
-                            var curr_time = Date().time
+                            curr_time = Date().time
                             //System.currentTimeMillis()
 
-                            val bcg_timestampS = bts_array[0]
-                            val ecg_timestampS = ets_array[0]
-                            val bcg_timestampED = bts_array[bcg_array.size -1]
-                            val ecg_timestampED = ets_array[ecg_array.size -1]
-
-                            var status_buffer : List<Int> = ArrayList()
-
-
-                            ets_array = ets_array.drop(8000)
-                            ecg_array = ecg_array.drop(8000)
-
-                            bcg_array = bcg_array.drop(16000)
-                            acx_array = acx_array.drop(16000)
-                            acy_array = acy_array.drop(16000)
-                            acz_array = acz_array.drop(16000)
-                            hr_array  = hr_array.drop(16000)
-                            res_array = res_array.drop(16000)
-
+                            //confidence_array = confidence_array.drop(16000)
                             ////////algo
                             algObject.put("post_t", 2)
                             algObject.put("userid",userID)
@@ -333,62 +360,72 @@ class health_panel : AppCompatActivity() {
                             algObject.put("hwversion",hwversion)
                             algObject.put("swversion",swversion)
                             algObject.put("timestamp",curr_time)
-                            algObject.put("timestampm",bcg_timestampS)
+                            algObject.put("timestampm",newbts)
                             algObject.put("fatigue", 1)
-                            algObject.put("hr",JSONArray(hr_array))
-                            algObject.put("confidence",JSONArray(confidence_array))
-                            algObject.put("resp",JSONArray(res_array))
+                            algObject.put("hr",hr_buffer)
+                            algObject.put("confidence",0)
+                            algObject.put("resp",res_buffer)
                             algObject.put("status",status_buffer)
-
                             fetchJSON(algObject)
 
-                            synchronized(fetchthread) {
-                                fetchthread.wait();
-                            }
+                            //synchronized(fetchthread) {
+                            //    fetchthread.wait();
+                            //}
+                            sleep(2000)
                             val algID = jsonreturn
 
 
                             //////ecg
                             ecgObject.put("post_t", 4)
-                            ecgObject.put("ecg",JSONArray(ecg_array))
+                            ecgObject.put("ecg",ecg_buffer)
                             ecgObject.put("datalen",2)
                             ecgObject.put("hwversion",2)
                             ecgObject.put("algoidlist",algID)
                             ecgObject.put("algoidlistlen",1)
-                            ecgObject.put("timestampst",ecg_timestampS)
-                            ecgObject.put("timestampend",ecg_timestampED)
+                            ecgObject.put("timestampst",newets)
+                            ecgObject.put("timestampend",newets + ECG_SIZE)
                             ecgObject.put("timestamp",curr_time)
                             fetchJSON(ecgObject)
 
 
-                            synchronized(fetchthread) {
-                                fetchthread.wait();
-                            }
+                            //synchronized(fetchthread) {
+                            //    fetchthread.wait();
+                            //}
+
+                            sleep(2000)
+
                             val ecgID = jsonreturn
 
                             //////bcg
                             bcgObject.put("post_t", 3)
-                            bcgObject.put("bcg",JSONArray(bcg_array))
-                            bcgObject.put("accx",JSONArray(acx_array))
-                            bcgObject.put("accy",JSONArray(acy_array))
-                            bcgObject.put("accz",JSONArray(acz_array))
+                            bcgObject.put("bcg",bcg_buffer)
+                            bcgObject.put("accx",acx_buffer)
+                            bcgObject.put("accy",acy_buffer)
+                            bcgObject.put("accz",acz_buffer)
                             bcgObject.put("device",1)
                             bcgObject.put("ecgidlist",ecgID)
                             bcgObject.put("datalen",1)
                             bcgObject.put("algoidlist",algID)
                             bcgObject.put("algoidlistlen",1)
-                            bcgObject.put("timestampst",bcg_timestampS)
-                            bcgObject.put("timestampend",bcg_timestampED)
+                            bcgObject.put("timestampst",newbts)
+                            bcgObject.put("timestampend",newbts+ BCG_SIZE)
                             bcgObject.put("timestamp",curr_time)
                             fetchJSON(bcgObject)
 
 
+                            upload_thread.interrupt()
 /////////////////upload data to database
-                        }.start()
+                        }
+                        upload_thread.start()
+
                     }//////upload
                     else{
 
                     }
+
+                }
+                else{
+                    bt_bluetooth.setImageResource(R.drawable.bt_off)
 
                 }
                 val dff = SimpleDateFormat("yyyyMMdd_HH:mm:ss")
@@ -453,6 +490,9 @@ class health_panel : AppCompatActivity() {
         else{
 
         }
+
+
+
         storagePath = this.getExternalFilesDir(null)
 
         create_saving_directory()
@@ -473,10 +513,10 @@ class health_panel : AppCompatActivity() {
             Log.e("onConnectStateChange", newState.toString())
             if(newState == 0 || newState == 3){
 
-                Toast.makeText(baseContext, "disconnected!!", Toast.LENGTH_LONG).show()
+                Log.e("BLE", "disconnected!!")
 
                 blecnt = false
-                bt_bluetooth.setImageResource(R.drawable.bt_off)
+                //bt_bluetooth.setImageResource(R.drawable.bt_off)
 
 
                 //    Bt_BCG?.text = "connect"
@@ -594,23 +634,26 @@ class health_panel : AppCompatActivity() {
                     */
                     outdata.set(i+1, tmp1)/////ecg
                 }
+                if(ets == -1)ets = outdata.get(0).toInt()
 
                 for(i in 1..64) {
                     extFile.appendText((outdata.get(0)+i-1).toString() + "\t"+ outdata.get(i).toString() +"\n")
-                    if(ecg_array.size >= ECG_SIZE) {
-                        ets_array.drop(256)
-                        ecg_array.drop(256)
 
-
-                        ets_array += (outdata.get(0) + i - 1).toInt()
+                        //ets_array += (outdata.get(0) + i - 1).toInt()
                         ecg_array +=  outdata.get(i).toInt()
-
-                    }
-                    else{
-                        ets_array += (outdata.get(0) + i - 1).toInt()
-                        ecg_array +=  outdata.get(i).toInt()
-                    }
                 }
+
+                if(ecg_array.size >= ECG_SIZE) {
+
+                    ecg_buffer = JSONArray(ecg_array)
+
+                    ecg_array = ecg_array.drop(30000)
+
+                    newets = ets
+                    ets = -1
+                    ecgok = true
+                }
+
 
             }
             else if(characteristic.uuid == UUID.fromString(UUID_CHAR_BCG)){
@@ -729,32 +772,37 @@ class health_panel : AppCompatActivity() {
 
                     //val bcgtmp = BCG(BCGtstp.toInt(),unsigned_check.toInt(),outdata[6].toInt(),outdata[7].toInt(),outdata[8].toInt(),outdata[3].toInt(),outdata[4].toInt())
 
+                    if(bts == -1)bts = BCGtstp.toInt()
+
+                    bcg_array += unsigned_check.toInt()
+                    acx_array += outdata[6].toInt()
+                    acy_array += outdata[7].toInt()
+                    acz_array += outdata[8].toInt()
+                    hr_array  += outdata[3].toInt()
+                    res_array += outdata[4].toInt()
+                    status_array += outdata[5].toInt()
+
+
                     if(bcg_array.size >=  BCG_SIZE) {
-                        bts_array.drop(512)
-                        bcg_array.drop(512)
-                        acx_array.drop(512)
-                        acy_array.drop(512)
-                        acz_array.drop(512)
-                        hr_array.drop(512)
-                        res_array.drop(512)
 
-                        bts_array += BCGtstp.toInt()
-                        bcg_array += unsigned_check.toInt()
-                        acx_array += outdata[6].toInt()
-                        acy_array += outdata[7].toInt()
-                        acz_array += outdata[8].toInt()
-                        hr_array  += outdata[3].toInt()
-                        res_array += outdata[4].toInt()
-                    }
-                    else{
-                        bts_array += BCGtstp.toInt()
-                        bcg_array += unsigned_check.toInt()
-                        acx_array += outdata[6].toInt()
-                        acy_array += outdata[7].toInt()
-                        acz_array += outdata[8].toInt()
-                        hr_array  += outdata[3].toInt()
-                        res_array += outdata[4].toInt()
+                        bcg_buffer = JSONArray(bcg_array)
+                        acx_buffer = JSONArray(acx_array)
+                        acy_buffer = JSONArray(acy_array)
+                        acz_buffer = JSONArray(acz_array)
+                        hr_buffer = JSONArray(hr_array)
+                        res_buffer = JSONArray(res_array)
+                        status_buffer = JSONArray(status_array)
 
+                        bcg_array = bcg_array.drop(30000)
+                        acx_array = acx_array.drop(30000)
+                        acy_array = acy_array.drop(30000)
+                        acz_array = acz_array.drop(30000)
+                        hr_array  = hr_array.drop(30000)
+                        res_array = res_array.drop(30000)
+
+                        newbts =  bts
+                        bts = -1
+                        bcgok =true
                     }
                     j+=1
                 }///////write bcg parced data
@@ -962,7 +1010,7 @@ class health_panel : AppCompatActivity() {
 
     fun fetchJSON(jsonObject: JSONObject){
         fetchthread =  Thread{
-            synchronized(this) {
+            //synchronized(this) {
                 try {
                     ///////private String url1 = "http://api.openweathermap.org/data/2.5/weather?q=";
                     //val url = "http://my-json-feed"
@@ -1014,6 +1062,7 @@ class health_panel : AppCompatActivity() {
                         response.append('\r')
                     }
                     jsonreturn = response.toString()
+                    Log.e("algoID",jsonreturn)
                     //tv_name.text = response.toString()
                     reader.close()
                     //thdone = true
@@ -1028,8 +1077,9 @@ class health_panel : AppCompatActivity() {
                 } catch (e: Exception) {
                     e.printStackTrace();
                 }
-                notify()
-            }
+                //notify()
+            //}
+
         }
         fetchthread.start()
         //return line

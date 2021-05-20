@@ -29,7 +29,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Drive_status_cntl">
-        <activity android:name=".EditProfile"></activity>
+        <activity android:name=".check_history"></activity>
+        <activity android:name=".wave_adjust" />
+        <activity android:name=".EditProfile" />
         <activity
             android:name=".Initial"
             android:screenOrientation="portrait"

@@ -39,7 +39,6 @@ import org.mindrot.jbcrypt.BCrypt
 
 class ecg_collect : AppCompatActivity() {
 
-    lateinit var bt_autoup :Button
     var autoup = false
 
     var jsonObject = JSONObject()
@@ -149,7 +148,7 @@ class ecg_collect : AppCompatActivity() {
 
                     when(wavemode){
                         0->{
-                            var ori_gv = ECG_pp.reversed()
+                            val ori_gv = ECG_pp.reversed()
                             GV?.setData(ori_gv)
                         }///////origin wave
                         1-> {
@@ -279,6 +278,15 @@ class ecg_collect : AppCompatActivity() {
             ActivityCompat.requestPermissions(
                     this,
                     arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                    9
+            )
+        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_NETWORK_STATE)
+                != PackageManager.PERMISSION_GRANTED) {
+            Log.e("Permission", "Request External Storage")
+            ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.ACCESS_NETWORK_STATE),
                     9
             )
         }
