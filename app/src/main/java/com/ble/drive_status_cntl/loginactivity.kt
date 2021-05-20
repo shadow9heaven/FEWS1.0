@@ -17,6 +17,7 @@ import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import okio.IOException
+import org.json.JSONArray
 import org.json.JSONObject
 import org.mindrot.jbcrypt.BCrypt
 import java.io.File
@@ -26,7 +27,6 @@ import java.util.*
 class loginactivity : AppCompatActivity(), View.OnClickListener {
     lateinit var bt_login : Button
     lateinit var bt_back:Button
-    lateinit var ed_name: EditText
     lateinit var ed_email: EditText
     lateinit var ed_password: EditText
     lateinit var username :String
@@ -35,10 +35,8 @@ class loginactivity : AppCompatActivity(), View.OnClickListener {
     lateinit var resStr :String
     lateinit var resStr_password:String
     lateinit var message:String
+    lateinit var oid:String
     var timestamp:Long=0L
-    var license:Int=0
-    var drink:Int=0
-    var disease:Int=0
     var jsonObject = JSONObject()
     var numberOfReq=0
     var ispost:Boolean =false
@@ -77,8 +75,6 @@ class loginactivity : AppCompatActivity(), View.OnClickListener {
         ///
         bt_login= findViewById(R.id.bt_login)
         bt_login.setOnClickListener(this)
-        ///
-        ed_name=findViewById(R.id.ed_name)
         ////
         ed_email=findViewById(R.id.ed_email)
         ///
@@ -96,12 +92,8 @@ class loginactivity : AppCompatActivity(), View.OnClickListener {
     }
     private fun Login(){
         timestamp= Date().time
-        username=ed_name.text.toString()
         email=ed_email.text.toString()
         password=ed_password.text.toString()
-        disease=0
-        drink=0
-        license=0
         getJSON()
         Log.e("time", "${Date().time}")
         SystemClock.sleep(500)
@@ -110,11 +102,8 @@ class loginactivity : AppCompatActivity(), View.OnClickListener {
     }
     private fun getJSON(){
         jsonObject.put("post_t", 0)/////string
-        var jsonname = JSONObject()
-        jsonname.put("\$regex", username)
         var jsonemail = JSONObject()
         jsonemail.put("\$regex", email)
-        jsonObject.put("username", jsonname) /////string
         jsonObject.put("email", jsonemail)
         val client = OkHttpClient()
         val mediaType = "application/json".toMediaType()
@@ -142,12 +131,12 @@ class loginactivity : AppCompatActivity(), View.OnClickListener {
     private fun checkPassword(resStr: String){
         val Json:JSONObject= JSONObject(resStr)
         resStr_password=Json.getString("password")
-        var oid=Json.getJSONObject("_id")?.getString("\$oid")
+        oid=Json.getJSONObject("_id")?.getString("\$oid").toString()
         Log.e("loginactivity", "$oid")
         if(BCrypt.checkpw(password, resStr_password)){
             pack_personfile(Json)
             Toast.makeText(this, "Login", Toast.LENGTH_SHORT).show()
-
+            username=Json.getString("username").toString()
             getIntent().putExtra("user", username)
             setResult(RESULT_OK, getIntent())
             finish()
@@ -163,16 +152,16 @@ class loginactivity : AppCompatActivity(), View.OnClickListener {
         var file = File(commandPath, filename)
         var filestring:String?
         var personObject=JSONObject()
-        personObject.put("username",username)
-        personObject.put("email",email)
-        personObject.put("password",password)
-        personObject.put("nickname",personInfo.getString("username"))
-        personObject.put("height",0)
-        personObject.put("weight",0)
-        personObject.put("birth",personInfo.getString("birthyear"))
-        personObject.put("drink",personInfo.getString("drink"))
-        personObject.put("disease",personInfo.getString("disease"))
-        personObject.put("license",personInfo.getString("license"))
+        personObject.put("oid",oid.toString())
+        personObject.put("email",email.toString())
+        personObject.put("password",password.toString())
+        personObject.put("username",personInfo.getString("username").toString())
+        personObject.put("height",personInfo.getString("height").toInt())
+        personObject.put("weight",personInfo.getString("weight").toInt())
+        personObject.put("birth",personInfo.getString("birthyear").toInt())
+        personObject.put("drink",personInfo.getString("drink").toInt())
+        personObject.put("disease",JSONArray(personInfo.getString("disease")))
+        personObject.put("license",JSONArray(personInfo.getString("license")))
         filestring = file.readText(Charsets.UTF_8)
         try {
             if (filestring.equals("null")) {
@@ -180,9 +169,31 @@ class loginactivity : AppCompatActivity(), View.OnClickListener {
                 writeLog("[$personObject]")
             }
             else{
-                filestring=filestring.removePrefix("[").removeSuffix("]")
-                filestring=filestring+","+personObject
-                writeLog("[$filestring]")
+                var file = File(commandPath, filename)
+                var filestring = file.readText(Charsets.UTF_8)
+                var array= JSONArray(filestring)
+                var check=false
+                for(i in 0 until array.length() step 1){
+                    var checkemail=array.getJSONObject(i).getString("email")
+                    if(checkemail.equals(email)){
+                        check=true
+                        array.getJSONObject(i).put("oid",personObject.getString("oid").toString())
+                        array.getJSONObject(i).put("username",personObject.getString("username").toString())
+                        array.getJSONObject(i).put("height",personObject.getString("height").toInt())
+                        array.getJSONObject(i).put("weight",personObject.getString("weight").toInt())
+                        array.getJSONObject(i).put("birth",personObject.getString("birth").toInt())
+                        array.getJSONObject(i).put("drink",personObject.getString("drink").toInt())
+                        array.getJSONObject(i).put("disease",JSONArray(personObject.getString("disease")))
+                        array.getJSONObject(i).put("license",JSONArray(personObject.getString("license")))
+                        writeLog(array.toString())
+                        break
+                    }
+                }
+                if(!check){
+                    filestring=filestring.removePrefix("[").removeSuffix("]")
+                    filestring=filestring+","+personObject
+                    writeLog("[$filestring]")
+                }
             }
         } catch (e:IOException) {
             Log.e("Error","$e")

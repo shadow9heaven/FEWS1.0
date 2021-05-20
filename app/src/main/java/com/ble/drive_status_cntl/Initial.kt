@@ -38,8 +38,6 @@ import kotlin.system.exitProcess
 class Initial : AppCompatActivity() , View.OnClickListener{
 
     var username :String = "guest"
-
-
     lateinit var bt_gmail:SignInButton
     lateinit var bt_Login:Button
     lateinit var bt_register:Button
@@ -133,7 +131,7 @@ class Initial : AppCompatActivity() , View.OnClickListener{
                 if (CheckConnectStatus()){
                     val intent = Intent(this, Register::class.java)
                     intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-                    startActivityForResult(intent, 2)
+                    startActivityForResult(intent, 3)
                     Toast.makeText(this, "Please Login.", Toast.LENGTH_SHORT).show()
                 }
                 else{
@@ -154,14 +152,11 @@ class Initial : AppCompatActivity() , View.OnClickListener{
                     if (CheckConnectStatus()) {
                         val array = JSONArray(filestring)
                         val personObject: JSONObject = JSONObject(array[user].toString())
-                        if (personObject.getString("username").toString() == "null") {
+                        if (personObject.getString("email").toString() == "null") {
                             askRegister(personObject)
                         } else {
                             getJSON(personObject)
-
-
                             username = userlist[user]!!
-
                             getIntent().putExtra("user", username)
                             setResult(RESULT_OK, getIntent())
                             finish()
@@ -217,15 +212,21 @@ class Initial : AppCompatActivity() , View.OnClickListener{
             userlist_spin()
 
         }
-        else if(requestCode == 4 && resultCode == RESULT_OK){
-            username = data?.getStringExtra("user")!!
+        else if(requestCode==3 && resultCode ==RESULT_OK){
+            userlist_spin()
 
+        }
+        else if(requestCode == 4 && resultCode == RESULT_OK){
+            userlist_spin()
+            username = data?.getStringExtra("user")!!
+/*
             getIntent().putExtra("user", username)
             setResult(RESULT_OK, getIntent())
-            finish()
+            finish()*/
         }
         else{
-
+            Log.e("check","$requestCode，$resultCode")
+            userlist_spin()
         }
 
     }
@@ -244,8 +245,8 @@ class Initial : AppCompatActivity() , View.OnClickListener{
                 var array= JSONArray(filestring)
                 userlist.clear()
                 for(i in 0 until array.length() step 1){
-                    var nickname=array.getJSONObject(i).getString("nickname")
-                    userlist.add(nickname.toString())
+                    var username=array.getJSONObject(i).getString("username")
+                    userlist.add(username.toString())
                 }
             }else{
                 userlist.clear()
@@ -279,11 +280,8 @@ class Initial : AppCompatActivity() , View.OnClickListener{
     private fun getJSON(personObject:JSONObject){
         val jsonObject=JSONObject()
         jsonObject.put("post_t", 0)/////string
-        var jsonname = JSONObject()
-        jsonname.put("\$regex", personObject.getString("username"))
         var jsonemail = JSONObject()
         jsonemail.put("\$regex", personObject.getString("email"))
-        jsonObject.put("username", jsonname) /////string
         jsonObject.put("email", jsonemail)
         val client = OkHttpClient()
         val mediaType = "application/json".toMediaType()
@@ -349,6 +347,10 @@ class Initial : AppCompatActivity() , View.OnClickListener{
                 startActivityForResult(intent, 2)
             })
             .setNegativeButton("No", DialogInterface.OnClickListener { dialogInterface, i ->
+                username = userlist[user]!!
+                getIntent().putExtra("user", username)
+                setResult(RESULT_OK, getIntent())
+                finish()
                 Log.e("Log", "$personObject")
             })
             .setCancelable(false)

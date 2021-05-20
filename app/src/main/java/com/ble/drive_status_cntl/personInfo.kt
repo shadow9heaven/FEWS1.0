@@ -2,6 +2,7 @@ package com.ble.drive_status_cntl
 
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
@@ -24,27 +25,32 @@ import org.mindrot.jbcrypt.BCrypt
 import java.io.File
 import java.lang.Exception
 import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.reflect.typeOf
 
 class personInfo : AppCompatActivity(),View.OnClickListener{
     lateinit var bt_register : Button
     lateinit var bt_back:Button
     lateinit var sp_drink : Spinner
-    lateinit var sp_license : Spinner
-    lateinit var sp_disease : Spinner
     lateinit var sp_birthyear : Spinner
-    lateinit var username:String
     lateinit var password:String
     lateinit var email:String
     lateinit var resStr :String
-    lateinit var ed_nickname:EditText
+    lateinit var ed_username:EditText
     lateinit var ed_height:EditText
     lateinit var ed_weight:EditText
-
+    lateinit var oid: String
+    lateinit var Bsonpassword:String
+    lateinit var cb_heartdisease:CheckBox
+    lateinit var cb_hypertension:CheckBox
+    lateinit var cb_scooter:CheckBox
+    lateinit var cb_car:CheckBox
+    lateinit var cb_truck:CheckBox
+    lateinit var license:List<Int>
+    lateinit var disease:List<Int>
     var birthyear=1961
     var timestamp:Long=0L
-    var license:Int=0
     var drink:Int=0
-    var disease:Int=0
     var numberOfReq=0
     var istest:Boolean=false
     var ispost:Boolean =false
@@ -65,9 +71,6 @@ class personInfo : AppCompatActivity(),View.OnClickListener{
         findID()
         birth_spin()
         drink_spin()
-        disease_spin()
-        license_spin()
-        username= intent.getStringExtra("username").toString()
         email= intent.getStringExtra("email").toString()
         password= intent.getStringExtra("password").toString()
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
@@ -99,21 +102,25 @@ class personInfo : AppCompatActivity(),View.OnClickListener{
         bt_register=findViewById(R.id.bt_register)
         bt_register.setOnClickListener(this)
         sp_birthyear = findViewById(R.id.sp_birthyear)
-        sp_disease=findViewById(R.id.sp_Disease)
         sp_drink=findViewById(R.id.sp_Drink)
-        sp_license=findViewById(R.id.sp_License)
         ed_height=findViewById(R.id.ed_height)
         ed_weight=findViewById(R.id.ed_weight)
-        ed_nickname=findViewById(R.id.ed_nickname)
+        ed_username=findViewById(R.id.ed_username)
+        cb_heartdisease=findViewById(R.id.cb_heartdisease)
+        cb_hypertension=findViewById(R.id.cb_hypertension)
+        cb_scooter=findViewById(R.id.cb_scooter)
+        cb_car=findViewById(R.id.cb_car)
+        cb_truck=findViewById(R.id.cb_truck)
     }
     override fun onClick(v: View?) {
         when(v?.id){
             R.id.bt_register -> {
                 if (status) {
-                    pack_personalfile1()
                     userinput()
                 }
                 else {
+                    license_check()
+                    disease_check()
                     pack_personalfile2()
                     setResult(RESULT_OK, getIntent())
                     finish()
@@ -129,16 +136,16 @@ class personInfo : AppCompatActivity(),View.OnClickListener{
         var filestring:String?
         var personObject=JSONObject()
         filestring = file.readText(Charsets.UTF_8)
-        personObject.put("username",username)
-        personObject.put("email",email)
-        personObject.put("password",password)
-        personObject.put("nickname",ed_nickname.text)
-        personObject.put("height",ed_height.text)
-        personObject.put("weight",ed_weight.text)
-        personObject.put("birth",birthyear)
-        personObject.put("drink",drink)
-        personObject.put("disease",disease)
-        personObject.put("license",license)
+        personObject.put("oid",oid.toString())
+        personObject.put("email",email.toString())
+        personObject.put("password",password.toString())
+        personObject.put("username",ed_username.text.toString())
+        personObject.put("height",ed_height.text.toString().toInt())
+        personObject.put("weight",ed_weight.text.toString().toInt())
+        personObject.put("birth",birthyear.toInt())
+        personObject.put("drink",drink.toInt())
+        personObject.put("disease",JSONArray(disease))
+        personObject.put("license",JSONArray(license))
         try {
             if (filestring.equals("null")) {
                 Log.e("test","here")
@@ -158,18 +165,18 @@ class personInfo : AppCompatActivity(),View.OnClickListener{
     private fun pack_personalfile2(){
         var file = File(commandPath, filename)
         var filestring:String?
+        filestring = file.readText(Charsets.UTF_8)
         var personObject=JSONObject()
-        personObject.put("username","null")
+        personObject.put("oid","null")
         personObject.put("email","null")
         personObject.put("password","null")
-        personObject.put("nickname",ed_nickname.text)
-        personObject.put("height",ed_height.text)
-        personObject.put("weight",ed_weight.text)
-        personObject.put("birth",birthyear)
-        personObject.put("drink",drink)
-        personObject.put("disease",disease)
-        personObject.put("license",license)
-        filestring = file.readText(Charsets.UTF_8)
+        personObject.put("username",ed_username.text.toString())
+        personObject.put("height",ed_height.text.toString().toInt())
+        personObject.put("weight",ed_weight.text.toString().toInt())
+        personObject.put("birth",birthyear.toInt())
+        personObject.put("drink",drink.toInt())
+        personObject.put("disease",JSONArray(disease))
+        personObject.put("license",JSONArray(license))
         try {
             if (filestring.equals("null")) {
 
@@ -193,25 +200,16 @@ class personInfo : AppCompatActivity(),View.OnClickListener{
     }
     private fun userinput(){
         timestamp= Date().time
-        if(!username.isNullOrEmpty()){
-            if (!email.isNullOrEmpty()){
-                if (!password.isNullOrEmpty()){
-                    password=generateHashedPass(password)
-                    checkRegister()
-                }
-                else Toast.makeText(this, "Password can't be empty.", Toast.LENGTH_SHORT).show()
+        if (!email.isNullOrEmpty()){
+            if (!password.isNullOrEmpty()){
+                Bsonpassword=generateHashedPass(password)
+                license_check()
+                disease_check()
+                checkRegister()
             }
-            else Toast.makeText(this, "Email can't be empty.", Toast.LENGTH_SHORT).show()
+            else Toast.makeText(this, "Password can't be empty.", Toast.LENGTH_SHORT).show()
         }
-        else Toast.makeText(this, "Username can't be empty.", Toast.LENGTH_SHORT).show()
-    }
-    private fun packname():JSONObject{
-        val nameobejct=JSONObject()
-        nameobejct.put("post_t", 0)/////string
-        var jsonname = JSONObject()
-        jsonname.put("\$regex", username)
-        nameobejct.put("username", jsonname) /////string
-        return nameobejct
+        else Toast.makeText(this, "Email can't be empty.", Toast.LENGTH_SHORT).show()
     }
     private fun packemail():JSONObject{
         val emailobejct=JSONObject()
@@ -222,16 +220,13 @@ class personInfo : AppCompatActivity(),View.OnClickListener{
         return emailobejct
     }
     private fun checkRegister(){
-        getJSON(packname())
+        getJSON(packemail())
         SystemClock.sleep(500)
         if (resStr.isNullOrEmpty()){
             getJSON(packemail())
             SystemClock.sleep(500)
             if (resStr.isNullOrEmpty()){
                 fetchJSON()
-                SystemClock.sleep(500)
-                setResult(RESULT_OK, getIntent())
-                finish()
             }
             else {
                 Toast.makeText(this, "This email is used.", Toast.LENGTH_SHORT).show()
@@ -271,14 +266,16 @@ class personInfo : AppCompatActivity(),View.OnClickListener{
     private fun fetchJSON(){
         var jsonObject= JSONObject()
         jsonObject.put("post_t", 0)/////string
-        jsonObject.put("username", username)/////string
-        jsonObject.put("email", email)
-        jsonObject.put("password", password)
-        jsonObject.put("birthyear", birthyear)
-        jsonObject.put("license", license)
-        jsonObject.put("drink", drink)
-        jsonObject.put("disease", disease)
-        jsonObject.put("timepstamp", timestamp)
+        jsonObject.put("email", email.toString())
+        jsonObject.put("password", Bsonpassword)
+        jsonObject.put("username", ed_username.text.toString())/////string
+        jsonObject.put("birthyear", birthyear.toInt())
+        jsonObject.put("height", ed_height.text.toString().toInt())
+        jsonObject.put("weight", ed_weight.text.toString().toInt())
+        jsonObject.put("drink", drink.toInt())
+        jsonObject.put("disease",JSONArray(disease))
+        jsonObject.put("license",JSONArray(license))
+        jsonObject.put("timestamp", Date().time)
         val client = OkHttpClient()
         val mediaType = "application/json".toMediaType()
         val body = jsonObject.toString().toRequestBody(mediaType)
@@ -298,6 +295,11 @@ class personInfo : AppCompatActivity(),View.OnClickListener{
                 ispost = true
                 resStr = response.body?.string().toString()
                 Log.e("Register Succeed", "${resStr}")
+                oid=resStr
+                pack_personalfile1()
+                setResult(RESULT_OK, getIntent())
+                Log.e("PERSONINFO","FINISH")
+                finish()
             }
 
 
@@ -319,42 +321,6 @@ class personInfo : AppCompatActivity(),View.OnClickListener{
             override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
                 Log.e("Spinner", "select $p2")
                 drink = p2
-            }
-            override fun onNothingSelected(p0: AdapterView<*>?) {
-            }
-        }
-    }
-    private fun disease_spin(){
-        val diseaselist = arrayListOf(
-            "None","heart disease", "hypertension"
-        )
-        val adapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_spinner_dropdown_item,
-            diseaselist
-        )
-        sp_disease.adapter = adapter
-        sp_disease.onItemSelectedListener = object: AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
-                Log.e("Spinner", "select $p2")
-                disease = p2
-            }
-            override fun onNothingSelected(p0: AdapterView<*>?) {
-            }
-        }
-    }
-    private fun license_spin(){
-        val licenselist = arrayListOf("scooter","car","truck")
-        val adapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_spinner_dropdown_item,
-            licenselist
-        )
-        sp_license.adapter = adapter
-        sp_license.onItemSelectedListener = object: AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
-                Log.e("Spinner", "select $p2")
-                license = p2
             }
             override fun onNothingSelected(p0: AdapterView<*>?) {
             }
@@ -382,5 +348,23 @@ class personInfo : AppCompatActivity(),View.OnClickListener{
             override fun onNothingSelected(p0: AdapterView<*>?) {
             }
         }
+    }
+    private fun license_check(){
+        license= listOf()
+        if(cb_scooter.isChecked)license += 1
+        else license+=0
+        if (cb_car.isChecked)license += 1
+        else license+=0
+        if (cb_truck.isChecked)license += 1
+        else license+=0
+        Log.e("license","$license")
+    }
+    private fun disease_check(){
+        disease= listOf()
+        if (cb_heartdisease.isChecked)disease+=1
+        else disease+=0
+        if (cb_hypertension.isChecked)disease+=1
+        else disease+=0
+        Log.e("disease","${disease}")
     }
 }

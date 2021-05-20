@@ -27,11 +27,9 @@ import kotlin.collections.RandomAccess
 class Register : AppCompatActivity(), View.OnClickListener{
     lateinit var bt_register : Button
     lateinit var bt_back:Button
-    lateinit var ed_name: EditText
     lateinit var ed_email: EditText
     lateinit var ed_password: EditText
     lateinit var ed_checkpassword:EditText
-    lateinit var username :String
     lateinit var email:String
     lateinit var password:String
     lateinit var resStr :String
@@ -41,7 +39,6 @@ class Register : AppCompatActivity(), View.OnClickListener{
     var numberOfReq=0
     var ispost:Boolean =false
     var ckeck_url="http://59.120.189.128:8081/data/biologueQuery"
-    val regex_name=Regex("[A-Za-z0-9_.-]{1,32}")
     val regex_email=Regex("[a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\\.[a-zA-Z.]{2,18}")
     val regex_password=Regex("[A-Za-z0-9_.-]{1,32}")
     val rigester_url = "http://59.120.189.128:8081/data/biologueData"
@@ -61,7 +58,6 @@ class Register : AppCompatActivity(), View.OnClickListener{
     private fun findID(){
         bt_register=findViewById(R.id.bt_register)
         bt_register.setOnClickListener(this)
-        ed_name=findViewById(R.id.ed_name)
         ed_email=findViewById(R.id.ed_email)
         ed_password=findViewById(R.id.ed_password)
         ed_checkpassword=findViewById(R.id.ed_checkpassword)
@@ -70,7 +66,8 @@ class Register : AppCompatActivity(), View.OnClickListener{
     }
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if(requestCode==2&&resultCode == RESULT_OK){
+        if(requestCode==30 && resultCode == RESULT_OK){
+            Log.e("TEST","request2")
             setResult(RESULT_OK, getIntent())
             finish()
         }
@@ -89,51 +86,28 @@ class Register : AppCompatActivity(), View.OnClickListener{
         }
     }
     private fun checkRegister(){
-        getJSON(packname())
+        getJSON(packemail())
         SystemClock.sleep(500)
         if (resStr.isNullOrEmpty()){
-            getJSON(packemail())
             SystemClock.sleep(500)
-            if (resStr.isNullOrEmpty()){
-                SystemClock.sleep(500)
-                if(user==-1)sendmessage()
-                else{
-                    var file = File(commandPath, filename)
-                    var filestring = file.readText(Charsets.UTF_8)
-                    var array= JSONArray(filestring)
-                    array.getJSONObject(user).put("password",password)
-                    array.getJSONObject(user).put("username",username)
-                    array.getJSONObject(user).put("email",email)
-                    Log.e("fetchJSON",array.getJSONObject(user).toString())
-                    writeLog(array.toString())
-                    fetchJSON(array.getJSONObject(user))
-                    /////
-                    ///Login
-                }
-            }
-            else {
-                Toast.makeText(this, "This email is used.", Toast.LENGTH_SHORT).show()
+            if(user==-1)sendmessage()
+            else{
+                fetchJSON(user)
+            /////
+            ///Login
             }
         }
-        else{
-            Toast.makeText(this, "This username is used.", Toast.LENGTH_SHORT).show()
+        else {
+            Toast.makeText(this, "This email is used.", Toast.LENGTH_SHORT).show()
         }
     }
     private fun sendmessage(){
         val intent = Intent(this, personInfo::class.java)
-        intent.putExtra("username",username)
         intent.putExtra("email",email)
         intent.putExtra("password",password)
         intent.putExtra("status",true)
-        startActivityForResult(intent, 2)
-    }
-    private fun packname():JSONObject{
-        val nameobejct=JSONObject()
-        nameobejct.put("post_t", 0)/////string
-        var jsonname = JSONObject()
-        jsonname.put("\$regex", username)
-        nameobejct.put("username", jsonname) /////string
-        return nameobejct
+        Log.e("SEND","request2")
+        startActivityForResult(intent, 30)
     }
     private fun packemail():JSONObject{
         val emailobejct=JSONObject()
@@ -172,28 +146,23 @@ class Register : AppCompatActivity(), View.OnClickListener{
     }
     private fun userinput(){
         timestamp= Date().time
-        username=ed_name.text.toString()
-        if(!username.isNullOrEmpty() && regex_name.matches(username)){
-            email=ed_email.text.toString()
-            if (!email.isNullOrEmpty() && regex_email.matches(email)){
-                password=ed_password.text.toString()
-                if (!password.isNullOrEmpty() && regex_password.matches(password)){
-                    checkpassword=ed_checkpassword.text.toString()
-                    if (!checkpassword.isNullOrEmpty())
-                        if (checkpassword==password){
-                            checkRegister()
-                        }
-                        else Toast.makeText(this, "Check Password and Password are incorrect.", Toast.LENGTH_SHORT).show()
-                    else Toast.makeText(this, "Check Password can't be empty.", Toast.LENGTH_SHORT).show()
-                }
-                else if(!regex_password.matches(password))Toast.makeText(this, "Password is illegal.", Toast.LENGTH_SHORT).show()
-                else Toast.makeText(this, "Password can't be empty.", Toast.LENGTH_SHORT).show()
+        email=ed_email.text.toString()
+        if (!email.isNullOrEmpty() && regex_email.matches(email)){
+            password=ed_password.text.toString()
+            if (!password.isNullOrEmpty() && regex_password.matches(password)){
+                checkpassword=ed_checkpassword.text.toString()
+                if (!checkpassword.isNullOrEmpty())
+                    if (checkpassword==password){
+                        checkRegister()
+                    }
+                    else Toast.makeText(this, "Check Password and Password are incorrect.", Toast.LENGTH_SHORT).show()
+                else Toast.makeText(this, "Check Password can't be empty.", Toast.LENGTH_SHORT).show()
             }
-            else if(!regex_email.matches(email))Toast.makeText(this, "Email is illegal.", Toast.LENGTH_SHORT).show()
-            else Toast.makeText(this, "Email can't be empty.", Toast.LENGTH_SHORT).show()
+            else if(!regex_password.matches(password))Toast.makeText(this, "Password is illegal.", Toast.LENGTH_SHORT).show()
+            else Toast.makeText(this, "Password can't be empty.", Toast.LENGTH_SHORT).show()
         }
-        else if(!regex_name.matches(username))Toast.makeText(this, "Username is illegal.", Toast.LENGTH_SHORT).show()
-        else Toast.makeText(this, "Username can't be empty.", Toast.LENGTH_SHORT).show()
+        else if(!regex_email.matches(email))Toast.makeText(this, "Email is illegal.", Toast.LENGTH_SHORT).show()
+        else Toast.makeText(this, "Email can't be empty.", Toast.LENGTH_SHORT).show()
     }
     private fun writeLog(input:String){
         var file=File(commandPath,filename)
@@ -207,17 +176,25 @@ class Register : AppCompatActivity(), View.OnClickListener{
             e.printStackTrace();
         }
     }
-    private fun fetchJSON(personObject:JSONObject){
+    private fun fetchJSON(user:Int){
+        var file = File(commandPath, filename)
+        var filestring = file.readText(Charsets.UTF_8)
+        var array= JSONArray(filestring)
+        array.getJSONObject(user).put("password",password)
+        array.getJSONObject(user).put("email",email)
+        val personObject=array.getJSONObject(user)
         var jsonObject= JSONObject()
         Log.e("fetchJSON",personObject.toString())
         jsonObject.put("post_t", 0)/////string
-        jsonObject.put("username", personObject.getString("username"))/////string
-        jsonObject.put("email", personObject.getString("email"))
+        jsonObject.put("username", personObject.getString("username").toString())/////string
+        jsonObject.put("email", personObject.getString("email").toString())
         jsonObject.put("password", generateHashedPass(personObject.getString("password")))
-        jsonObject.put("birthyear", personObject.getString("birth"))
-        jsonObject.put("license", personObject.getString("license"))
-        jsonObject.put("drink", personObject.getString("drink"))
-        jsonObject.put("disease", personObject.getString("disease"))
+        jsonObject.put("birthyear", personObject.getString("birth").toInt())
+        jsonObject.put("height", personObject.getString("height").toInt())
+        jsonObject.put("weight", personObject.getString("weight").toInt())
+        jsonObject.put("drink", personObject.getString("drink").toInt())
+        jsonObject.put("license", JSONArray(personObject.getString("license")))
+        jsonObject.put("disease", JSONArray(personObject.getString("disease")))
         jsonObject.put("timestamp", Date().time)
         val client = OkHttpClient()
         val mediaType = "application/json".toMediaType()
@@ -238,9 +215,9 @@ class Register : AppCompatActivity(), View.OnClickListener{
                 ispost = true
                 resStr = response.body?.string().toString()
                 Log.e("Register Succeed", "${resStr}")
+                array.getJSONObject(user).put("oid",resStr)
+                writeLog(array.toString())
             }
-
-
         })
     }
     private fun generateHashedPass(pass: String): String {
