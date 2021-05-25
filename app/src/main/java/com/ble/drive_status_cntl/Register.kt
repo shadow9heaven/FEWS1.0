@@ -12,7 +12,6 @@ import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.annotation.RequiresApi
-import androidx.core.graphics.rotationMatrix
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -22,7 +21,6 @@ import org.json.JSONObject
 import org.mindrot.jbcrypt.BCrypt
 import java.io.File
 import java.util.*
-import kotlin.collections.RandomAccess
 
 class Register : AppCompatActivity(), View.OnClickListener{
     lateinit var bt_register : Button

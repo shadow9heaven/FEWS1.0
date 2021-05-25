@@ -3,7 +3,6 @@ package com.ble.drive_status_cntl
 import android.Manifest
 import android.bluetooth.*
 import android.bluetooth.BluetoothProfile.GATT
-import android.bluetooth.BluetoothProfile.STATE_CONNECTING
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -31,11 +30,10 @@ import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.InputStream
 import java.io.InputStreamReader
-import java.lang.Math.random
+
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.*
-import org.mindrot.jbcrypt.BCrypt
 
 class ecg_collect : AppCompatActivity() {
 

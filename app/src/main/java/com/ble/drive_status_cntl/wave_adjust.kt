@@ -4,6 +4,9 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 
+
+
+
 class wave_adjust : AppCompatActivity() {
     //var
 
