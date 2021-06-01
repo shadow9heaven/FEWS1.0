@@ -3,6 +3,8 @@ package com.ble.drive_status_cntl
 import android.Manifest
 import android.bluetooth.*
 import android.bluetooth.BluetoothProfile.GATT
+import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanResult
 import android.content.ComponentCallbacks2
 import android.content.Context
 import android.content.Intent
@@ -48,7 +50,6 @@ class health_panel : AppCompatActivity() {
     val BCG_SIZE = 64 * 60
     val ECG_SIZE = 128 * 60
     val HR_SIZE = 1800
-
     //val MINITE = 60
 
     //val UPLOAD_TIME = 60
@@ -59,6 +60,8 @@ class health_panel : AppCompatActivity() {
 
     var delta = 0/////check bcg signal level
     var wavetune  = 1.0f
+
+    var getreconn = false
 
 
     var newets = -1
@@ -178,6 +181,7 @@ class health_panel : AppCompatActivity() {
     lateinit var bt_bluetooth : ImageButton
     lateinit var tv_heartrate :TextView
 
+    private val bluetoothLeScanner = BluetoothAdapter.getDefaultAdapter().bluetoothLeScanner
 
     var blecnt  = false
 
@@ -293,7 +297,10 @@ class health_panel : AppCompatActivity() {
                                         //device = bluetoothManager.getConnectedDevices(BluetoothProfile.GATT)[0]
 
                                         //if(device == null){}
-
+                                        getreconn = false
+                                        bluetoothLeScanner!!.startScan(leScanCallback)
+                                        sleep(2000)
+                                        bluetoothLeScanner!!.stopScan(leScanCallback)
 
                                         mgatt = device.connectGatt(this@health_panel, false, gattCB)
                                         sleep(1000)
@@ -352,6 +359,7 @@ class health_panel : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_health_panel)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
         try{
             user  = intent?.getStringExtra("user")!!
             carid = intent?.getStringExtra("car")!!
@@ -361,6 +369,7 @@ class health_panel : AppCompatActivity() {
         catch (e :Exception){
 
         }
+
         val intent = Intent(this, bluetooth::class.java)
         startActivityForResult(intent, 1)
 
@@ -1055,10 +1064,18 @@ class health_panel : AppCompatActivity() {
 
     }
 
-    fun clickwaveset(view: View) {
+    private val leScanCallback = object : ScanCallback() {
+        override fun onScanResult(callbackType: Int, result: ScanResult?) {
+            if(result!!.device == device){
 
+
+
+            }
+        }
+        override fun onScanFailed(errorCode: Int) {
+            Log.e("Scan Failed", "Error Code: $errorCode")
+        }
     }
-
     fun fetchJSON(jsonObject: JSONObject){
         //fetchthread =  Thread{
             //synchronized(this) {
@@ -1171,4 +1188,10 @@ class health_panel : AppCompatActivity() {
             bt_startdatacollect.text = "收集資料"
         }
     }
+    fun clickwaveset(view: View) {
+
+    }
+
+
+
 }

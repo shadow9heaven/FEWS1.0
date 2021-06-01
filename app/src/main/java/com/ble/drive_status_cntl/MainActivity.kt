@@ -96,9 +96,9 @@ class MainActivity : AppCompatActivity() {
              20->{
                  if (resultCode == RESULT_OK) {
                      userName = data?.getStringExtra("user")!!
+                     userID = data?.getStringExtra("userid")!!
 
-
-                     Toast.makeText(this, "user:" + userName, Toast.LENGTH_LONG).show()
+                     Toast.makeText(this, "user:" + userName + "ID:" + userID , Toast.LENGTH_LONG).show()
                  }
              }
             30->{
@@ -107,7 +107,7 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     finish()
                 }
-            }
+            }/////////close
             40->{
                 if (resultCode == RESULT_OK) {
                    carid = data?.getStringExtra("carname")!!
@@ -115,6 +115,14 @@ class MainActivity : AppCompatActivity() {
 
                 }
 
+            }/////////
+            50->{
+                if (resultCode == RESULT_OK) {
+
+                }
+                else{
+
+                }
             }
             else->{
 
@@ -152,6 +160,13 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(this, Carinfo::class.java)
         intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         startActivityForResult(intent, 40)
+    }
+
+    fun clickcheckhistory(view: View) {
+        val intent = Intent(this, check_history::class.java)
+        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        startActivityForResult(intent, 50)
+
     }
 
 
