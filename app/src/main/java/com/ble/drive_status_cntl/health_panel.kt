@@ -125,7 +125,7 @@ class health_panel : AppCompatActivity() {
     lateinit var tv_time :TextView
 
     lateinit var device :BluetoothDevice
-    lateinit var device_add :BluetoothDevice
+    var device_add =""
 
     var GV: GraphView? = null
 
@@ -292,7 +292,7 @@ class health_panel : AppCompatActivity() {
                                 Thread {
                                     try {
                                         reconn++
-                                        device = device_add
+                                        //device = device_add
                                         //
                                         //device = bluetoothManager.getConnectedDevices(BluetoothProfile.GATT)[0]
 
@@ -301,18 +301,19 @@ class health_panel : AppCompatActivity() {
                                         bluetoothLeScanner!!.startScan(leScanCallback)
                                         sleep(2000)
                                         bluetoothLeScanner!!.stopScan(leScanCallback)
-
-                                        mgatt = device.connectGatt(this@health_panel, false, gattCB)
-                                        sleep(1000)
-                                        //send_start()
-                                        if(bluetoothManager.getConnectionState(device, GATT) == 1 ||
-                                            bluetoothManager.getConnectionState(device, GATT) == 2){
-                                            Toast.makeText(this@health_panel, "connection rebuild!!", Toast.LENGTH_LONG).show()
-                                            conncount = 0
-                                            reconn = 0
-                                        }////connection build
-                                        else{}
-
+                                        if(getreconn) {
+                                            mgatt = device.connectGatt(this@health_panel, false, gattCB)
+                                            sleep(1000)
+                                            //send_start()
+                                            if (bluetoothManager.getConnectionState(device, GATT) == 1 ||
+                                                    bluetoothManager.getConnectionState(device, GATT) == 2) {
+                                                Toast.makeText(this@health_panel, "connection rebuild!!", Toast.LENGTH_LONG).show()
+                                                conncount = 0
+                                                reconn = 0
+                                            }////connection build
+                                            else {
+                                            }
+                                        }
                                     }
                                     catch(e : Exception){
                                     }
@@ -1066,9 +1067,9 @@ class health_panel : AppCompatActivity() {
 
     private val leScanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult?) {
-            if(result!!.device == device){
-
-
+            if(result!!.device.address == device_add){
+                device = result!!.device
+                getreconn = true
 
             }
         }
