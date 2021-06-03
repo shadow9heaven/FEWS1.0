@@ -32,6 +32,8 @@ import org.json.JSONObject
 import org.mindrot.jbcrypt.BCrypt
 import java.io.File
 import java.lang.Exception
+import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.system.exitProcess
 
 
@@ -48,7 +50,7 @@ class Initial : AppCompatActivity() , View.OnClickListener{
     lateinit var userlist:ArrayList<String?>
     lateinit var resStr:String
     var user=0
-    var url = "http://59.120.189.128:8081/data/biologueQuery"
+    var url = "http://59.120.189.128:8082/users"
     var timerHandler2: Handler? = Handler()
     ////load file
     lateinit var commandPath : File
@@ -68,11 +70,10 @@ class Initial : AppCompatActivity() , View.OnClickListener{
         }
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             Log.e("Permission", "Request External Storage")
-
             ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                9
+                    this,
+                    arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                    9
             )
         }
 
@@ -109,8 +110,8 @@ class Initial : AppCompatActivity() , View.OnClickListener{
         when(v?.id){
             R.id.sign_in_button -> {
                 val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                    .requestEmail()
-                    .build()
+                        .requestEmail()
+                        .build()
                 val mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
                 findID()
                 val signInIntent = mGoogleSignInClient.signInIntent
@@ -156,15 +157,12 @@ class Initial : AppCompatActivity() , View.OnClickListener{
                             askRegister(personObject)
                         } else {
                             getJSON(personObject)
-                            username = userlist[user]!!
-                            getIntent().putExtra("user", username)
-                            setResult(RESULT_OK, getIntent())
-                            finish()
                         }
                     } else {
                         /////offline login
                         username = userlist[user]!!
-                        getIntent().putExtra("user", username)
+                        getIntent().putExtra("username", username)
+                        getIntent().putExtra("user", user)
                         setResult(RESULT_OK, getIntent())
                         finish()
                         Log.e("Log", "$personObject")
@@ -196,11 +194,9 @@ class Initial : AppCompatActivity() , View.OnClickListener{
             bt_gmail.visibility=View.VISIBLE
         }
     }
-/*
     override fun onBackPressed() {
         //super.onBackPressed()
     }
-*/
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if(requestCode==0 && resultCode ==RESULT_OK) {
@@ -245,8 +241,10 @@ class Initial : AppCompatActivity() , View.OnClickListener{
                 var array= JSONArray(filestring)
                 userlist.clear()
                 for(i in 0 until array.length() step 1){
-                    var username=array.getJSONObject(i).getString("username")
-                    userlist.add(username.toString())
+                    var username=array.getJSONObject(i).getString("username").toString()
+                    var email=array.getJSONObject(i).getString("email").toString()
+                    var string=username+"  (${email})"
+                    userlist.add(string)
                 }
             }else{
                 userlist.clear()
@@ -254,9 +252,9 @@ class Initial : AppCompatActivity() , View.OnClickListener{
             }
         }
         val adapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_spinner_dropdown_item,
-            userlist
+                this,
+                android.R.layout.simple_spinner_dropdown_item,
+                userlist
         )
         sp_userlist.adapter = adapter
         sp_userlist.onItemSelectedListener = object: AdapterView.OnItemSelectedListener {
@@ -278,18 +276,13 @@ class Initial : AppCompatActivity() , View.OnClickListener{
         }
     }
     private fun getJSON(personObject:JSONObject){
-        val jsonObject=JSONObject()
-        jsonObject.put("post_t", 0)/////string
-        var jsonemail = JSONObject()
-        jsonemail.put("\$regex", personObject.getString("email"))
-        jsonObject.put("email", jsonemail)
+        val email=personObject.getString("email")
+        var getemail=url+"/email="+email
         val client = OkHttpClient()
-        val mediaType = "application/json".toMediaType()
-        val body = jsonObject.toString().toRequestBody(mediaType)
         val request: Request = Request.Builder()
-            .url(url)
-            .post(body)
-            .build()
+                .url(getemail)
+                .get()
+                .build()
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 println("fail : $e")
@@ -298,19 +291,32 @@ class Initial : AppCompatActivity() , View.OnClickListener{
 
             override fun onResponse(call: Call, response: Response) {
                 resStr = response.body?.string().toString()
-                if (resStr.isNullOrEmpty()){
-                    SystemClock.sleep(300)
-                }
-                resStr=resStr.removeSuffix("]").removePrefix("[")
-                Log.e("Res","$resStr")
                 Log.e("per","${personObject.getString("password")}")
-                val resStrObject=JSONObject(resStr)
-                if(BCrypt.checkpw(personObject.getString("password"), resStrObject.getString("password"))){
+                Log.e("res","${resStr}")
+                var resPassword=foundLast(resStr).getString("password")
+                if(BCrypt.checkpw(personObject.getString("password"), resPassword)){
                     Log.e("Login","Right")
+                    username = userlist[user]!!
+                    getIntent().putExtra("username", username)
+                    getIntent().putExtra("user", user)
+                    updateAPI(user)
                 }
                 else Log.e("Login","Error")
             }
         })
+    }
+    private fun foundLast(resStr:String):JSONObject{
+        var array=JSONArray(JSONObject(resStr).getString("data"))
+        var max=0
+        var LastTime :Long =0L
+        for(i in 0 until array.length() step 1){
+            var time=array.getJSONObject(i).getString("timestamp").toLong()
+            if(time>LastTime){
+                LastTime=time
+                max=i
+            }
+        }
+        return array.getJSONObject(max)
     }
     private val timerRunnable2: Runnable = object : Runnable {
         @RequiresApi(Build.VERSION_CODES.M)
@@ -338,26 +344,26 @@ class Initial : AppCompatActivity() , View.OnClickListener{
     }
     private fun askRegister(personObject: JSONObject){
         AlertDialog.Builder(this)
-            .setTitle("Suggest")
-            .setMessage("Do you mind to Register a account?")
-            .setPositiveButton("OK", DialogInterface.OnClickListener { dialogInterface, i ->
-                val intent = Intent(this, Register::class.java)
-                intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-                intent.putExtra("user", user)
-                startActivityForResult(intent, 2)
-            })
-            .setNegativeButton("No", DialogInterface.OnClickListener { dialogInterface, i ->
-                username = userlist[user]!!
-                getIntent().putExtra("user", username)
-                setResult(RESULT_OK, getIntent())
-                finish()
-                Log.e("Log", "$personObject")
-            })
-            .setCancelable(false)
-            .show()
+                .setTitle("Suggest")
+                .setMessage("Do you mind to Register an account?")
+                .setPositiveButton("OK", DialogInterface.OnClickListener { dialogInterface, i ->
+                    val intent = Intent(this, Register::class.java)
+                    intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+                    intent.putExtra("user", user)
+                    startActivityForResult(intent, 2)
+                })
+                .setNegativeButton("No", DialogInterface.OnClickListener { dialogInterface, i ->
+                    username = userlist[user]!!
+                    getIntent().putExtra("username", username)
+                    getIntent().putExtra("user", user)
+                    setResult(RESULT_OK, getIntent())
+                    finish()
+                    Log.e("Log", "$personObject")
+                })
+                .setCancelable(false)
+                .show()
     }
-    override fun onRequestPermissionsResult(requestCode: Int,
-                                            permissions: Array<String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(requestCode: Int,permissions: Array<String>, grantResults: IntArray) {
         when (requestCode) {
             9-> {
                 userlist_spin()
@@ -365,6 +371,51 @@ class Initial : AppCompatActivity() , View.OnClickListener{
             }
             else -> {
             }
+        }
+    }
+    private fun updateAPI(user:Int) {
+        var file = File(commandPath, filename)
+        var filestring = file.readText(Charsets.UTF_8)
+        var array = JSONArray(filestring)
+        var personObjects=array.getJSONObject(user)
+        var get_id = url + "/userid=" + personObjects.getString("_id")
+        val client = OkHttpClient()
+        val request: Request = Request.Builder()
+                .url(get_id)
+                .get()
+                .build()
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                println("fail : $e")
+                Log.e("Error", "$e")
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                resStr = response.body?.string()!!
+                Log.e("ResStr","$resStr")
+                val temp=foundLast(resStr)
+                array.getJSONObject(user).put("username",temp.getString("username").toString())
+                array.getJSONObject(user).put("height",temp.getString("height").toString().toInt())
+                array.getJSONObject(user).put("weight",temp.getString("weight").toString().toInt())
+                array.getJSONObject(user).put("birth",temp.getString("birthyear").toInt())
+                array.getJSONObject(user).put("drink",temp.getString("drink").toInt())
+                array.getJSONObject(user).put("disease",JSONArray(temp.getString("disease")))
+                array.getJSONObject(user).put("license",JSONArray(temp.getString("license")))
+                writeLog(array.toString())
+                setResult(RESULT_OK, getIntent())
+                finish()
+            }
+        })
+    }
+    private fun writeLog(input:String){
+        var file=File(commandPath,filename)
+        try {
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            file.writeText(input)
+        } catch (e:IOException) {
+            e.printStackTrace();
         }
     }
 }

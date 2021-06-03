@@ -2,6 +2,8 @@ package com.ble.drive_status_cntl
 
 
 import android.Manifest
+import android.app.AlertDialog
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -39,7 +41,7 @@ class personInfo : AppCompatActivity(),View.OnClickListener{
     lateinit var ed_username:EditText
     lateinit var ed_height:EditText
     lateinit var ed_weight:EditText
-    lateinit var oid: String
+    lateinit var _id: String
     lateinit var Bsonpassword:String
     lateinit var cb_heartdisease:CheckBox
     lateinit var cb_hypertension:CheckBox
@@ -55,18 +57,16 @@ class personInfo : AppCompatActivity(),View.OnClickListener{
     var istest:Boolean=false
     var ispost:Boolean =false
     var status:Boolean=false
-    val rigester_url = "http://59.120.189.128:8081/data/biologueData"
-    var ckeck_url="http://59.120.189.128:8081/data/biologueQuery"
+    var ifreg:Boolean=true
+    val url = "http://59.120.189.128:8082/users"
+    var user=-1
     ////personal file
     lateinit var commandPath : File
     val filename = "emulated/0/personalFile_4_28.txt"
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreate(savedInstanceState: Bundle?) {
-
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_person_info)
-        Log.e("register","3")
-
         status=intent.getBooleanExtra("status",false)
         findID()
         birth_spin()
@@ -76,9 +76,9 @@ class personInfo : AppCompatActivity(),View.OnClickListener{
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             Log.e("Permission", "Request External Storage")
             ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                9
+                    this,
+                    arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                    9
             )
         }
         commandPath = File(Environment.getStorageDirectory().absolutePath)
@@ -136,16 +136,19 @@ class personInfo : AppCompatActivity(),View.OnClickListener{
         var filestring:String?
         var personObject=JSONObject()
         filestring = file.readText(Charsets.UTF_8)
-        personObject.put("oid",oid.toString())
-        personObject.put("email",email.toString())
-        personObject.put("password",password.toString())
+        Log.e("_ID","${_id.length}")
+        _id=_id.substring(1,25)
+        personObject.put("_id",_id)
+        personObject.put("email",email)
+        personObject.put("password",password)
         personObject.put("username",ed_username.text.toString())
         personObject.put("height",ed_height.text.toString().toInt())
         personObject.put("weight",ed_weight.text.toString().toInt())
-        personObject.put("birth",birthyear.toInt())
-        personObject.put("drink",drink.toInt())
+        personObject.put("birth",birthyear)
+        personObject.put("drink",drink)
         personObject.put("disease",JSONArray(disease))
         personObject.put("license",JSONArray(license))
+        Log.e("CHECK",personObject.toString())
         try {
             if (filestring.equals("null")) {
                 Log.e("test","here")
@@ -167,7 +170,7 @@ class personInfo : AppCompatActivity(),View.OnClickListener{
         var filestring:String?
         filestring = file.readText(Charsets.UTF_8)
         var personObject=JSONObject()
-        personObject.put("oid","null")
+        personObject.put("_id","null")
         personObject.put("email","null")
         personObject.put("password","null")
         personObject.put("username",ed_username.text.toString())
@@ -179,7 +182,6 @@ class personInfo : AppCompatActivity(),View.OnClickListener{
         personObject.put("license",JSONArray(license))
         try {
             if (filestring.equals("null")) {
-
                 Log.e("test","here")
                 writeLog("[$personObject]")
 
@@ -193,7 +195,6 @@ class personInfo : AppCompatActivity(),View.OnClickListener{
             Log.e("Error","$e")
             e.printStackTrace();
         }
-        return
     }
     private fun generateHashedPass(pass: String): String {
         return BCrypt.hashpw(pass, BCrypt.gensalt())
@@ -206,46 +207,24 @@ class personInfo : AppCompatActivity(),View.OnClickListener{
                 license_check()
                 disease_check()
                 checkRegister()
+                SystemClock.sleep(500)
+                if(ifreg)ifRegistered(resStr)
+                else{
+                    fetchJSON()
+                }
             }
             else Toast.makeText(this, "Password can't be empty.", Toast.LENGTH_SHORT).show()
         }
         else Toast.makeText(this, "Email can't be empty.", Toast.LENGTH_SHORT).show()
     }
-    private fun packemail():JSONObject{
-        val emailobejct=JSONObject()
-        emailobejct.put("post_t", 0)/////string
-        var jsonemail = JSONObject()
-        jsonemail.put("\$regex", email)
-        emailobejct.put("email", jsonemail)
-        return emailobejct
-    }
     private fun checkRegister(){
-        getJSON(packemail())
-        SystemClock.sleep(500)
-        if (resStr.isNullOrEmpty()){
-            getJSON(packemail())
-            SystemClock.sleep(500)
-            if (resStr.isNullOrEmpty()){
-                fetchJSON()
-            }
-            else {
-                Toast.makeText(this, "This email is used.", Toast.LENGTH_SHORT).show()
-            }
-        }
-        else{
-            Toast.makeText(this, "This username is used.", Toast.LENGTH_SHORT).show()
-        }
-    }
-    private fun getJSON(jsonObject:JSONObject){
         resStr=""
+        var getdata=url+"/email="+email
         val client = OkHttpClient()
-        val mediaType = "application/json".toMediaType()
-        val body = jsonObject.toString().toRequestBody(mediaType)
-        Log.e("Check", jsonObject.toString())
         val request: Request = Request.Builder()
-            .url(ckeck_url)
-            .post(body)
-            .build()
+                .url(getdata)
+                .get()
+                .build()
         numberOfReq++;
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
@@ -258,14 +237,15 @@ class personInfo : AppCompatActivity(),View.OnClickListener{
                 ispost = true
                 resStr = response.body?.string().toString()
                 Log.e("Response", "${resStr}")
-                resStr = resStr.removePrefix("[")
-                resStr = resStr.removeSuffix("]")
+                var temp=JSONObject(resStr)
+                if (temp.isNull("data")){
+                    ifreg=false
+                }
             }
         })
     }
     private fun fetchJSON(){
         var jsonObject= JSONObject()
-        jsonObject.put("post_t", 0)/////string
         jsonObject.put("email", email.toString())
         jsonObject.put("password", Bsonpassword)
         jsonObject.put("username", ed_username.text.toString())/////string
@@ -280,25 +260,24 @@ class personInfo : AppCompatActivity(),View.OnClickListener{
         val mediaType = "application/json".toMediaType()
         val body = jsonObject.toString().toRequestBody(mediaType)
         val request: Request = Request.Builder()
-            .url(rigester_url)
-            .post(body)
-            .build()
+                .url(url)
+                .post(body)
+                .build()
         numberOfReq++;
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 println("fail : $e")
                 Log.e("Error", "$e")
             }
-
             override fun onResponse(call: Call, response: Response) {
                 numberOfReq--
                 ispost = true
-                resStr = response.body?.string().toString()
-                Log.e("Register Succeed", "${resStr}")
-                oid=resStr
+                resStr = response.body?.string()!!
+                Log.e("long","${resStr.length}")
+                _id=resStr
                 pack_personalfile1()
                 setResult(RESULT_OK, getIntent())
-                Log.e("PERSONINFO","FINISH")
+                Log.e("PERSONINFO",resStr)
                 finish()
             }
 
@@ -307,14 +286,14 @@ class personInfo : AppCompatActivity(),View.OnClickListener{
     }
     private fun drink_spin(){
         val drinklist = arrayListOf(
-            "Never", "Once a year", "Once every six months","Once every three months","Once every two months",
-            "Once every months","Once every three weeks","Once every two weeks","Once every weeks",
-            "Once every two days","EveryDay"
+                "Never", "Once a year", "Once every six months","Once every three months","Once every two months",
+                "Once every months","Once every three weeks","Once every two weeks","Once every weeks",
+                "Once every two days","EveryDay"
         )
         val adapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_spinner_dropdown_item,
-            drinklist
+                this,
+                android.R.layout.simple_spinner_dropdown_item,
+                drinklist
         )
         sp_drink.adapter = adapter
         sp_drink.onItemSelectedListener = object: AdapterView.OnItemSelectedListener {
@@ -328,16 +307,16 @@ class personInfo : AppCompatActivity(),View.OnClickListener{
     }
     private fun birth_spin(){
         val birthyearlist = arrayListOf(
-            "1961", "1962", "1963", "1964", "1965", "1966", "1967", "1968", "1969", "1970",
-            "1971", "1972", "1973", "1974", "1975", "1976", "1977", "1978", "1979", "1980",
-            "1981", "1982", "1983", "1984", "1985", "1986", "1987", "1988", "1989", "1990",
-            "1991", "1992", "1993", "1994", "1995", "1996", "1997", "1998", "1999", "2000",
-            "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010"
+                "1961", "1962", "1963", "1964", "1965", "1966", "1967", "1968", "1969", "1970",
+                "1971", "1972", "1973", "1974", "1975", "1976", "1977", "1978", "1979", "1980",
+                "1981", "1982", "1983", "1984", "1985", "1986", "1987", "1988", "1989", "1990",
+                "1991", "1992", "1993", "1994", "1995", "1996", "1997", "1998", "1999", "2000",
+                "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010"
         )
         val adapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_spinner_dropdown_item,
-            birthyearlist
+                this,
+                android.R.layout.simple_spinner_dropdown_item,
+                birthyearlist
         )
         sp_birthyear.adapter = adapter
         sp_birthyear.onItemSelectedListener = object: AdapterView.OnItemSelectedListener {
@@ -366,5 +345,15 @@ class personInfo : AppCompatActivity(),View.OnClickListener{
         if (cb_hypertension.isChecked)disease+=1
         else disease+=0
         Log.e("disease","${disease}")
+    }
+    private fun ifRegistered(resStr:String){
+        AlertDialog.Builder(this)
+                .setTitle("Suggest")
+                .setMessage("this email is registered.")
+                .setPositiveButton("OK", DialogInterface.OnClickListener { dialogInterface, i ->
+                    Log.e("ResStr","${resStr}")
+                })
+                .setCancelable(false)
+                .show()
     }
 }

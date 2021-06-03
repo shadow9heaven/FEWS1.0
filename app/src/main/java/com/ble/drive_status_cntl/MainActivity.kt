@@ -1,6 +1,8 @@
 package com.ble.drive_status_cntl
 
+import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -10,8 +12,15 @@ import android.widget.*
 import kotlin.system.exitProcess
 
 class MainActivity : AppCompatActivity() {
+
     lateinit var bt_drive_panel :Button
     lateinit var bt_upload :Button
+
+
+    lateinit var IV_moditfy: ImageView
+
+    var online = true
+
     var userName = "guest"
     var userID = "hametorigun"
     var carid = "car"
@@ -36,7 +45,7 @@ class MainActivity : AppCompatActivity() {
         intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         startActivityForResult(intent, 30)
 
-
+        IV_moditfy = findViewById(R.id.bt_modify)
         sp_car = findViewById(R.id.sp_car)
         val adapter2 = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item , carlist)
 
@@ -52,6 +61,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        if(!CheckConnectStatus()){
+        }
+        else{
+        }
 
     }
     fun clickpanel(view: View) {
@@ -75,7 +88,6 @@ class MainActivity : AppCompatActivity() {
         startActivityForResult(intent, 11)
     }
     fun clickECG(view: View) {
-
         val intent = Intent(this, ecg_collect::class.java)
         intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         startActivityForResult(intent, 12)
@@ -153,7 +165,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun clickeditfile(view: View) {
+        if(userName != "guest" && CheckConnectStatus()){
 
+            val intent = Intent(this, EditProfile::class.java)
+            intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+            intent.putExtra("user", userName )
+            startActivityForResult(intent, 50)
+
+        }
+        else{
+            Toast.makeText(this, "Check your connect status.", Toast.LENGTH_SHORT).show()
+        }
     }
 
     fun clickchangecar(view: View) {
@@ -163,11 +185,24 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun clickcheckhistory(view: View) {
-        val intent = Intent(this, check_history::class.java)
-        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-        startActivityForResult(intent, 50)
 
+        if(userName != "guest" && CheckConnectStatus()) {
+            val intent = Intent(this, check_history::class.java)
+            intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            startActivityForResult(intent, 50)
+        }
+        else{
+
+        }
     }
-
+    private fun CheckConnectStatus():Boolean{
+        val ConnectionManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val networkInfo = ConnectionManager.activeNetworkInfo
+        if (networkInfo != null && networkInfo.isConnected == true) {
+            return true
+        } else {
+            return false
+        }
+    }
 
 }

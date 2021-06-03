@@ -380,10 +380,12 @@ class health_panel : AppCompatActivity() {
         algObject.put("hwversion",hwversion)
         algObject.put("swversion",swversion)
 
+
         ecgObject.put("post_t", 4)
         ecgObject.put("algoidlistlen",1)
         ecgObject.put("datalen",2)
         ecgObject.put("hwversion",2)
+
 
         bcgObject.put("post_t", 3)
         bcgObject.put("device",1)
@@ -395,10 +397,12 @@ class health_panel : AppCompatActivity() {
 
         hrhandle?.postDelayed(timerRunnable2, 0)
 
+
         bt_bluetooth = findViewById(R.id.IB_bluetooth)
         bt_waveform  = findViewById(R.id.bt_waveform)
         bt_autoup    = findViewById(R.id.bt_autoup)
         bt_startdatacollect = findViewById(R.id.bt_startdatacollect)
+
 
         tv_heartrate = findViewById(R.id.tv_heartrate)
         tv_time      = findViewById(R.id.tv_time)
@@ -469,7 +473,9 @@ class health_panel : AppCompatActivity() {
 
             Log.e("serviceDiscovered", biologue_char_command.toString())
 
+
             // Enable Notify ECG
+
             var notify_success = gatt!!.setCharacteristicNotification(biologue_char_ecg, true)
             if(notify_success) Log.e("Biologue", "Enable notify 1")
             else Log.e("Biologue", "Fail to enable notify 1")

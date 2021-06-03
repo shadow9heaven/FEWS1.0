@@ -12,7 +12,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".personInfo">
+        tools:context=".EditProfile">
         <com.google.android.material.appbar.AppBarLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -26,13 +26,13 @@
             app:layout_constraintVertical_bias="0">
 
             <TextView
-                android:id="@+id/title"
+                android:id="@+id/ep_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:minHeight="?actionBarSize"
                 android:padding="16dp"
-                android:text="Register"
+                android:text="EditProfile"
                 android:textAppearance="@style/TextAppearance.Widget.AppCompat.Toolbar.Title" />
         </com.google.android.material.appbar.AppBarLayout>
 
@@ -43,7 +43,7 @@
             tools:layout_editor_absoluteX="0dp"
             tools:layout_editor_absoluteY="0dp">
             <LinearLayout
-                android:id="@+id/ll_username"
+                android:id="@+id/ll_ep_username"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:layout_marginLeft="20dp"
@@ -56,7 +56,7 @@
                 app:layout_constraintTop_toTopOf="@id/parent">
 
                 <TextView
-                    android:id="@+id/signusername"
+                    android:id="@+id/ep_signusername"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -64,7 +64,7 @@
                     android:textSize="24sp" />
 
                 <EditText
-                    android:id="@+id/ed_username"
+                    android:id="@+id/ep_ed_username"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -73,7 +73,7 @@
 
             </LinearLayout>
             <LinearLayout
-                android:id="@+id/ll_height"
+                android:id="@+id/ll_ep_height"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:layout_marginLeft="20dp"
@@ -83,10 +83,10 @@
                 android:orientation="horizontal"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="@id/ll_username">
+                app:layout_constraintTop_toTopOf="@id/ll_ep_username">
 
                 <TextView
-                    android:id="@+id/signheight"
+                    android:id="@+id/ep_tx_height"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -94,7 +94,7 @@
                     android:textSize="24sp" />
 
                 <EditText
-                    android:id="@+id/ed_height"
+                    android:id="@+id/ep_ed_height"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -103,7 +103,7 @@
 
             </LinearLayout>
             <LinearLayout
-                android:id="@+id/ll_weight"
+                android:id="@+id/ll_ep_weight"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:layout_marginLeft="20dp"
@@ -113,17 +113,17 @@
                 android:orientation="horizontal"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="@id/ll_height">
+                app:layout_constraintTop_toTopOf="@id/ll_ep_height">
 
                 <TextView
-                    android:id="@+id/signweight"
+                    android:id="@+id/ep_tx_weight"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:text="Weight(kg)"
                     android:textSize="24sp" />
                 <EditText
-                    android:id="@+id/ed_weight"
+                    android:id="@+id/ep_ed_weight"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -132,7 +132,7 @@
 
             </LinearLayout>
             <LinearLayout
-                android:id="@+id/ll_birth"
+                android:id="@+id/ll_ep_birth"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:layout_marginLeft="20dp"
@@ -145,7 +145,7 @@
                 app:layout_constraintTop_toTopOf="@id/parent">
 
                 <TextView
-                    android:id="@+id/signbtirth"
+                    android:id="@+id/ep_tx_birth"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -153,14 +153,14 @@
                     android:textSize="24sp" />
 
                 <Spinner
-                    android:id="@+id/sp_birthyear"
+                    android:id="@+id/ep_sp_birthyear"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1" />
 
             </LinearLayout>
             <LinearLayout
-                android:id="@+id/ll_Drink"
+                android:id="@+id/ll_ep_Drink"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:layout_marginLeft="20dp"
@@ -170,10 +170,10 @@
                 android:orientation="horizontal"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="@id/ll_birth">
+                app:layout_constraintTop_toTopOf="@id/ll_ep_birth">
 
                 <TextView
-                    android:id="@+id/signDrink"
+                    android:id="@+id/ep_tx_Drink"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -181,14 +181,14 @@
                     android:textSize="24sp" />
 
                 <Spinner
-                    android:id="@+id/sp_Drink"
+                    android:id="@+id/ep_sp_Drink"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1" />
 
             </LinearLayout>
             <LinearLayout
-                android:id="@+id/ll_Disease"
+                android:id="@+id/ll_ep_Disease"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="20dp"
@@ -198,10 +198,10 @@
                 android:orientation="horizontal"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="@id/ll_Drink">
+                app:layout_constraintTop_toTopOf="@id/ll_ep_Drink">
 
                 <TextView
-                    android:id="@+id/signDisease"
+                    android:id="@+id/ep_tx_Disease"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_marginRight="50dp"
@@ -210,7 +210,7 @@
                     android:textSize="24sp" />
 
                 <LinearLayout
-                    android:id="@+id/ll_cb_disease"
+                    android:id="@+id/ll_ep_cb_disease"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center"
@@ -219,14 +219,14 @@
                     app:layout_constraintRight_toRightOf="parent">
 
                     <CheckBox
-                        android:id="@+id/cb_heartdisease"
+                        android:id="@+id/ep_cb_heartdisease"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Heart Disease"
                         android:gravity="center"
                         />
                     <CheckBox
-                        android:id="@+id/cb_hypertension"
+                        android:id="@+id/ep_cb_hypertension"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Hypertension"
@@ -235,7 +235,7 @@
 
             </LinearLayout>
             <LinearLayout
-                android:id="@+id/ll_License"
+                android:id="@+id/ll_ep_License"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="20dp"
@@ -245,10 +245,10 @@
                 android:orientation="horizontal"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="@id/ll_Disease">
+                app:layout_constraintTop_toTopOf="@id/ll_ep_Disease">
 
                 <TextView
-                    android:id="@+id/signLicense"
+                    android:id="@+id/ep_tx_License"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -257,7 +257,7 @@
                     android:textSize="24sp" />
 
                 <LinearLayout
-                    android:id="@+id/ll_cb_license"
+                    android:id="@+id/ll_ep_cb_license"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginRight="90dp"
@@ -266,19 +266,19 @@
                     app:layout_constraintRight_toRightOf="parent">
 
                     <CheckBox
-                        android:id="@+id/cb_scooter"
+                        android:id="@+id/ep_cb_scooter"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Scooter"
                         android:gravity="center" />
                     <CheckBox
-                        android:id="@+id/cb_car"
+                        android:id="@+id/ep_cb_car"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Car"
                         android:gravity="center" />
                     <CheckBox
-                        android:id="@+id/cb_truck"
+                        android:id="@+id/ep_cb_truck"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Truck"
@@ -286,7 +286,7 @@
                 </LinearLayout>
             </LinearLayout>
             <LinearLayout
-                android:id="@+id/ll_button"
+                android:id="@+id/ll_ep_button"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:layout_marginLeft="40dp"
@@ -296,20 +296,20 @@
                 android:orientation="horizontal"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="@id/ll_License">
+                app:layout_constraintTop_toTopOf="@id/ll_ep_License">
                 <Button
-                    android:id="@+id/bt_back"
+                    android:id="@+id/ep_bt_back"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Back"
                     android:textColor="#121010"
                     android:textSize="14sp" />
                 <Button
-                    android:id="@+id/bt_register"
+                    android:id="@+id/ep_bt_confirm"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="40dp"
-                    android:text="Register"
+                    android:text="Confirm"
                     android:textColor="#121010"
                     android:textSize="14sp" />
             </LinearLayout>

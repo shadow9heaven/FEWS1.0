@@ -1,5 +1,7 @@
 package com.ble.drive_status_cntl
 
+import android.app.AlertDialog
+import android.content.DialogInterface
 import android.content.Intent
 import android.net.ConnectivityManager
 import android.os.Build
@@ -33,14 +35,13 @@ class loginactivity : AppCompatActivity(), View.OnClickListener {
     lateinit var email:String
     lateinit var password:String
     lateinit var resStr :String
-    lateinit var resStr_password:String
     lateinit var message:String
-    lateinit var oid:String
+    lateinit var _id:String
     var timestamp:Long=0L
     var jsonObject = JSONObject()
     var numberOfReq=0
-    var ispost:Boolean =false
-    var url = "http://59.120.189.128:8081/data/biologueQuery"
+    var url = "http://59.120.189.128:8082/users"
+    var isreg=false
     ///
     lateinit var commandPath : File
     val filename = "emulated/0/personalFile_4_28.txt"
@@ -60,7 +61,6 @@ class loginactivity : AppCompatActivity(), View.OnClickListener {
             Log.e("loginactivity ", message)
         }
         else if(requestCode==2&&resultCode == RESULT_OK){
-
             setResult(RESULT_OK, getIntent())
             finish()
         }
@@ -84,6 +84,10 @@ class loginactivity : AppCompatActivity(), View.OnClickListener {
         when(v?.id){
             R.id.bt_login -> {
                 Login()
+                SystemClock.sleep(500)
+                if(!isreg)ifRegistered(resStr)
+                else checkPassword(foundLast(resStr).getString("password"))
+
             }
             R.id.bt_loginback -> {
                 finish()
@@ -94,23 +98,11 @@ class loginactivity : AppCompatActivity(), View.OnClickListener {
         timestamp= Date().time
         email=ed_email.text.toString()
         password=ed_password.text.toString()
-        getJSON()
-        Log.e("time", "${Date().time}")
-        SystemClock.sleep(500)
-        if(numberOfReq==0&&ispost==true && !resStr.isNullOrEmpty())checkPassword(resStr)
-        else Toast.makeText(this, "Account or email is wrong.$password", Toast.LENGTH_SHORT).show()
-    }
-    private fun getJSON(){
-        jsonObject.put("post_t", 0)/////string
-        var jsonemail = JSONObject()
-        jsonemail.put("\$regex", email)
-        jsonObject.put("email", jsonemail)
+        var getdata=url+"/email="+email
         val client = OkHttpClient()
-        val mediaType = "application/json".toMediaType()
-        val body = jsonObject.toString().toRequestBody(mediaType)
         val request: Request = Request.Builder()
-                .url(url)
-                .post(body)
+                .url(getdata)
+                .get()
                 .build()
         numberOfReq++;
         client.newCall(request).enqueue(object : Callback {
@@ -118,33 +110,37 @@ class loginactivity : AppCompatActivity(), View.OnClickListener {
                 println("fail : $e")
                 Log.e("Error", "connect failed.")
             }
-
             override fun onResponse(call: Call, response: Response) {
                 numberOfReq--
-                ispost = true
                 resStr = response.body?.string().toString()
-                Log.e("Response", "${resStr}")
-                resStr = resStr.removePrefix("[").removeSuffix("]")
+                if(!JSONObject(resStr).isNull("data")){
+                    isreg=true
+                }
             }
         })
     }
-    private fun checkPassword(resStr: String){
-        val Json:JSONObject= JSONObject(resStr)
-        resStr_password=Json.getString("password")
-        oid=Json.getJSONObject("_id")?.getString("\$oid").toString()
-        Log.e("loginactivity", "$oid")
+    private fun foundLast(resStr:String):JSONObject{
+        var array=JSONArray(JSONObject(resStr).getString("data"))
+        var max=0
+        var LastTime :Long =0L
+        for(i in 0 until array.length() step 1){
+            var time=array.getJSONObject(i).getString("timestamp").toLong()
+            if(time>LastTime){
+                LastTime=time
+                max=i
+            }
+        }
+        return array.getJSONObject(max)
+    }
+    private fun checkPassword(resStr_password: String){
         if(BCrypt.checkpw(password, resStr_password)){
-            pack_personfile(Json)
+            pack_personfile(foundLast(resStr))
             Toast.makeText(this, "Login", Toast.LENGTH_SHORT).show()
-            username=Json.getString("username").toString()
+            username=foundLast(resStr).getString("username").toString()
             getIntent().putExtra("user", username)
             setResult(RESULT_OK, getIntent())
             finish()
 
-            //val intent = Intent(this, Carinfo::class.java)
-            //intent.putExtra("oid", oid)
-            //startActivityForResult(intent, 2)
-            //Toast.makeText(this, "Please add the information of your car.", Toast.LENGTH_SHORT).show()
         }
         else Toast.makeText(this, "Password is wrong", Toast.LENGTH_SHORT).show()
     }
@@ -152,7 +148,7 @@ class loginactivity : AppCompatActivity(), View.OnClickListener {
         var file = File(commandPath, filename)
         var filestring:String?
         var personObject=JSONObject()
-        personObject.put("oid",oid.toString())
+        personObject.put("_id",personInfo.getString("_id"))
         personObject.put("email",email.toString())
         personObject.put("password",password.toString())
         personObject.put("username",personInfo.getString("username").toString())
@@ -177,7 +173,7 @@ class loginactivity : AppCompatActivity(), View.OnClickListener {
                     var checkemail=array.getJSONObject(i).getString("email")
                     if(checkemail.equals(email)){
                         check=true
-                        array.getJSONObject(i).put("oid",personObject.getString("oid").toString())
+                        array.getJSONObject(i).put("_id",personObject.getString("_id").toString())
                         array.getJSONObject(i).put("username",personObject.getString("username").toString())
                         array.getJSONObject(i).put("height",personObject.getString("height").toInt())
                         array.getJSONObject(i).put("weight",personObject.getString("weight").toInt())
@@ -211,5 +207,15 @@ class loginactivity : AppCompatActivity(), View.OnClickListener {
         } catch (e:IOException) {
             e.printStackTrace();
         }
+    }
+    private fun ifRegistered(resStr:String){
+        AlertDialog.Builder(this)
+                .setTitle("Suggest")
+                .setMessage("this email is never registered.")
+                .setPositiveButton("OK", DialogInterface.OnClickListener { dialogInterface, i ->
+                    Log.e("ResStr","${resStr}")
+                })
+                .setCancelable(false)
+                .show()
     }
 }

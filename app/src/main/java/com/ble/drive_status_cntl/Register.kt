@@ -1,7 +1,8 @@
-
 package com.ble.drive_status_cntl
 
 
+import android.app.AlertDialog
+import android.content.DialogInterface
 import android.content.Intent
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
@@ -12,6 +13,7 @@ import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.annotation.RequiresApi
+import androidx.core.graphics.rotationMatrix
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -21,6 +23,7 @@ import org.json.JSONObject
 import org.mindrot.jbcrypt.BCrypt
 import java.io.File
 import java.util.*
+import kotlin.collections.RandomAccess
 
 class Register : AppCompatActivity(), View.OnClickListener{
     lateinit var bt_register : Button
@@ -32,21 +35,19 @@ class Register : AppCompatActivity(), View.OnClickListener{
     lateinit var password:String
     lateinit var resStr :String
     lateinit var checkpassword:String
+    var ifreg=true
     var user=-1
     var timestamp:Long=0L
     var numberOfReq=0
     var ispost:Boolean =false
-    var ckeck_url="http://59.120.189.128:8081/data/biologueQuery"
+    var url = "http://59.120.189.128:8082/users"
     val regex_email=Regex("[a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\\.[a-zA-Z.]{2,18}")
     val regex_password=Regex("[A-Za-z0-9_.-]{1,32}")
-    val rigester_url = "http://59.120.189.128:8081/data/biologueData"
     ////personal file
     lateinit var commandPath : File
     val filename = "emulated/0/personalFile_4_28.txt"
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreate(savedInstanceState: Bundle?) {
-        Log.e("register","2")
-
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register)
         findID()
@@ -83,22 +84,6 @@ class Register : AppCompatActivity(), View.OnClickListener{
             }
         }
     }
-    private fun checkRegister(){
-        getJSON(packemail())
-        SystemClock.sleep(500)
-        if (resStr.isNullOrEmpty()){
-            SystemClock.sleep(500)
-            if(user==-1)sendmessage()
-            else{
-                fetchJSON(user)
-            /////
-            ///Login
-            }
-        }
-        else {
-            Toast.makeText(this, "This email is used.", Toast.LENGTH_SHORT).show()
-        }
-    }
     private fun sendmessage(){
         val intent = Intent(this, personInfo::class.java)
         intent.putExtra("email",email)
@@ -107,24 +92,15 @@ class Register : AppCompatActivity(), View.OnClickListener{
         Log.e("SEND","request2")
         startActivityForResult(intent, 30)
     }
-    private fun packemail():JSONObject{
-        val emailobejct=JSONObject()
-        emailobejct.put("post_t", 0)/////string
-        var jsonemail = JSONObject()
-        jsonemail.put("\$regex", email)
-        emailobejct.put("email", jsonemail)
-        return emailobejct
-    }
-    private fun getJSON(jsonObject:JSONObject){
+
+    private fun checkRegister(){
         resStr=""
+        var getemail=url+"/email="+email
         val client = OkHttpClient()
-        val mediaType = "application/json".toMediaType()
-        val body = jsonObject.toString().toRequestBody(mediaType)
-        Log.e("Check", jsonObject.toString())
         val request: Request = Request.Builder()
-            .url(ckeck_url)
-            .post(body)
-            .build()
+                .url(getemail)
+                .get()
+                .build()
         numberOfReq++;
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
@@ -136,9 +112,14 @@ class Register : AppCompatActivity(), View.OnClickListener{
                 numberOfReq--
                 ispost = true
                 resStr = response.body?.string().toString()
-                Log.e("Response", "${resStr}")
-                resStr = resStr.removePrefix("[")
-                resStr = resStr.removeSuffix("]")
+                val temp=JSONObject(resStr)
+                if(temp.isNull("data")){
+                    ifreg=false
+                    if(user==-1)sendmessage()
+                    else{
+                        fetchJSON(user)
+                    }
+                }
             }
         })
     }
@@ -152,6 +133,8 @@ class Register : AppCompatActivity(), View.OnClickListener{
                 if (!checkpassword.isNullOrEmpty())
                     if (checkpassword==password){
                         checkRegister()
+                        SystemClock.sleep(500)
+                        if(ifreg)ifRegistered(resStr)
                     }
                     else Toast.makeText(this, "Check Password and Password are incorrect.", Toast.LENGTH_SHORT).show()
                 else Toast.makeText(this, "Check Password can't be empty.", Toast.LENGTH_SHORT).show()
@@ -183,7 +166,6 @@ class Register : AppCompatActivity(), View.OnClickListener{
         val personObject=array.getJSONObject(user)
         var jsonObject= JSONObject()
         Log.e("fetchJSON",personObject.toString())
-        jsonObject.put("post_t", 0)/////string
         jsonObject.put("username", personObject.getString("username").toString())/////string
         jsonObject.put("email", personObject.getString("email").toString())
         jsonObject.put("password", generateHashedPass(personObject.getString("password")))
@@ -198,27 +180,38 @@ class Register : AppCompatActivity(), View.OnClickListener{
         val mediaType = "application/json".toMediaType()
         val body = jsonObject.toString().toRequestBody(mediaType)
         val request: Request = Request.Builder()
-            .url(rigester_url)
-            .post(body)
-            .build()
+                .url(url)
+                .post(body)
+                .build()
         numberOfReq++;
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 println("fail : $e")
                 Log.e("Error", "$e")
             }
-
             override fun onResponse(call: Call, response: Response) {
                 numberOfReq--
                 ispost = true
                 resStr = response.body?.string().toString()
                 Log.e("Register Succeed", "${resStr}")
-                array.getJSONObject(user).put("oid",resStr)
+                resStr=resStr.substring(1,25)
+                array.getJSONObject(user).put("_id",resStr)
+                Log.e("CHECK",array.getJSONObject(user).toString())
                 writeLog(array.toString())
             }
         })
     }
     private fun generateHashedPass(pass: String): String {
         return BCrypt.hashpw(pass, BCrypt.gensalt())
+    }
+    private fun ifRegistered(resStr:String){
+        AlertDialog.Builder(this)
+                .setTitle("Suggest")
+                .setMessage("this email is registered.")
+                .setPositiveButton("OK", DialogInterface.OnClickListener { dialogInterface, i ->
+                    Log.e("ResStr","${resStr}")
+                })
+                .setCancelable(false)
+                .show()
     }
 }
