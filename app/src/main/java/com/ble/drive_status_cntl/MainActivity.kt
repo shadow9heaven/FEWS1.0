@@ -17,14 +17,14 @@ class MainActivity : AppCompatActivity() {
     lateinit var bt_upload :Button
 
 
-    lateinit var IV_moditfy: ImageView
+    lateinit var bt_moditfy: Button
 
     var online = true
 
     var userName = "guest"
     var userID = "hametorigun"
     var carid = "car"
-
+    var user = 0
     var ecgdatalog : ArrayList<String> = arrayListOf<String>()
     var bcgdatalog : ArrayList<String> = arrayListOf<String>()
     var getlog = false
@@ -45,7 +45,7 @@ class MainActivity : AppCompatActivity() {
         intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         startActivityForResult(intent, 30)
 
-        IV_moditfy = findViewById(R.id.bt_modify)
+        bt_moditfy = findViewById(R.id.bt_modify)
         sp_car = findViewById(R.id.sp_car)
         val adapter2 = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item , carlist)
 
@@ -107,14 +107,18 @@ class MainActivity : AppCompatActivity() {
             }
              20->{
                  if (resultCode == RESULT_OK) {
-                     userName = data?.getStringExtra("user")!!
-                     userID = data?.getStringExtra("userid")!!
 
-                     Toast.makeText(this, "user:" + userName + "ID:" + userID , Toast.LENGTH_LONG).show()
+
+
                  }
              }
             30->{
                 if (resultCode == RESULT_OK) {
+                    userName = data?.getStringExtra("username")!!
+
+                    userID = data?.getStringExtra("userid")!!
+                    user = data?.getIntExtra("user",-1)!!
+                    Toast.makeText(this, "user:" + userName + "ID:" + userID , Toast.LENGTH_LONG).show()
 
                 } else {
                     finish()
@@ -136,6 +140,10 @@ class MainActivity : AppCompatActivity() {
 
                 }
             }
+            60->{
+
+            }
+
             else->{
 
             }
@@ -163,36 +171,44 @@ class MainActivity : AppCompatActivity() {
         intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         startActivityForResult(intent, 30)
     }
-
+    fun clickchangecar(view: View) {
+        val intent = Intent(this, Carinfo::class.java)
+        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        startActivityForResult(intent, 40)
+    }
     fun clickeditfile(view: View) {
         if(userName != "guest" && CheckConnectStatus()){
 
             val intent = Intent(this, EditProfile::class.java)
             intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-            intent.putExtra("user", userName )
+            intent.putExtra("userName", userName )
+            intent.putExtra("user",user)
+
             startActivityForResult(intent, 50)
 
+        }
+        else if (userName == "guest" ){
+            Toast.makeText(this, "guest mode can't edit", Toast.LENGTH_SHORT).show()
         }
         else{
             Toast.makeText(this, "Check your connect status.", Toast.LENGTH_SHORT).show()
         }
     }
 
-    fun clickchangecar(view: View) {
-        val intent = Intent(this, Carinfo::class.java)
-        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-        startActivityForResult(intent, 40)
-    }
+
 
     fun clickcheckhistory(view: View) {
 
         if(userName != "guest" && CheckConnectStatus()) {
             val intent = Intent(this, check_history::class.java)
             intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-            startActivityForResult(intent, 50)
+            startActivityForResult(intent, 60)
+        }
+        else if (userName == "guest" ){
+            Toast.makeText(this, "guest mode can't use", Toast.LENGTH_SHORT).show()
         }
         else{
-
+            Toast.makeText(this, "Check your connect status.", Toast.LENGTH_SHORT).show()
         }
     }
     private fun CheckConnectStatus():Boolean{

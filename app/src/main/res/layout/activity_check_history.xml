@@ -17,13 +17,15 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.1" />
-    <LinearLayout
-        android:id="@+id/ll_misc"
+        app:layout_constraintVertical_bias="0.1"
+        android:background="@color/gray"/>
+
+        <RadioGroup
+            android:id="@+id/rg_misc"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="15dp"
-        android:orientation="horizontal"
+        android:orientation="vertical"
 
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -31,46 +33,38 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/gv_check_BCG"
         app:layout_constraintHorizontal_bias="0.15"
-        >
-        <LinearLayout
-            android:id="@+id/ll_HR"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:orientation="vertical"
             >
-            <TextView
-                android:id = "@+id/tv_hrtext"
-                android:layout_height="wrap_content"
+            <RadioButton
+                android:id="@+id/rb_HR"
                 android:layout_width="wrap_content"
-                />
-            <TextView
-                android:id = "@+id/tv_hr"
                 android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
+                android:layout_margin="8dp"
+                android:text = "心率"
+                android:textSize="40dp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:background="@color/alert_red"
+                app:buttonTint="#673AB7"
                 />
 
-        </LinearLayout>
-        <LinearLayout
-            android:id="@+id/ll_resp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:orientation="vertical">
-            <TextView
-                android:id = "@+id/tv_resptext"
-                android:layout_height="wrap_content"
+
+            <RadioButton
+                android:id="@+id/rb_resp"
                 android:layout_width="wrap_content"
-                />
-            <TextView
-                android:id = "@+id/tv_resp"
                 android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
+                android:layout_margin="8dp"
+                android:text = "呼吸"
+                android:textSize="40dp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:background="@color/teal_200"
+                app:buttonTint="#673AB7"
                 />
-        </LinearLayout>
+
+        </RadioGroup>
 
 
-    </LinearLayout>
+
 
     <Spinner
         android:id = "@+id/spr_hour"
@@ -107,12 +101,12 @@
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_bias="0.8"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.7"
+        app:layout_constraintVertical_bias="0.5"
         />
 
     <TextView
@@ -121,12 +115,12 @@
         android:id="@+id/hourText"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_bias="0.8"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.89"
+        app:layout_constraintVertical_bias="0.58"
         />
     <Button
         android:id="@+id/button6"

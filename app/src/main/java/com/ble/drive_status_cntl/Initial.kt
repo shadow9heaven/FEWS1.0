@@ -49,7 +49,10 @@ class Initial : AppCompatActivity() , View.OnClickListener{
     lateinit var sp_userlist:Spinner
     lateinit var userlist:ArrayList<String?>
     lateinit var resStr:String
+
     var user=0
+    var userid = ""
+
     var url = "http://59.120.189.128:8082/users"
     var timerHandler2: Handler? = Handler()
     ////load file
@@ -121,12 +124,17 @@ class Initial : AppCompatActivity() , View.OnClickListener{
                 if (CheckConnectStatus()) {
 
                     val intent = Intent(this, loginactivity::class.java)
+
                     intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
                     startActivityForResult(intent, 4)
+
                     Toast.makeText(this, "Please Login.", Toast.LENGTH_SHORT).show()
                 } else {
                     Toast.makeText(this, "Please check connect status", Toast.LENGTH_SHORT).show()
                 }
+
+
+
             }
             R.id.bt_register -> {
                 if (CheckConnectStatus()){
@@ -147,12 +155,12 @@ class Initial : AppCompatActivity() , View.OnClickListener{
                 var file = File(commandPath, filename)
                 var filestring = file.readText(Charsets.UTF_8)
                 val array = JSONArray(filestring)
-                val personObject: JSONObject = JSONObject(array[user].toString())
+                val personObject = JSONObject(array[user].toString())
                 if (filestring.equals("null")) Toast.makeText(this, "Please Login or Register.", Toast.LENGTH_SHORT).show()
                 else {
                     if (CheckConnectStatus()) {
                         val array = JSONArray(filestring)
-                        val personObject: JSONObject = JSONObject(array[user].toString())
+                        val personObject = JSONObject(array[user].toString())
                         if (personObject.getString("email").toString() == "null") {
                             askRegister(personObject)
                         } else {
@@ -160,18 +168,27 @@ class Initial : AppCompatActivity() , View.OnClickListener{
                         }
                     } else {
                         /////offline login
-                        username = userlist[user]!!
+                        username = personObject.getString("username")
+                        userid = personObject.getString("_id")
+
+
                         getIntent().putExtra("username", username)
+                        getIntent().putExtra("userid", userid)
                         getIntent().putExtra("user", user)
+                        //getIntent().putExtra("user", user)
                         setResult(RESULT_OK, getIntent())
                         finish()
+
                         Log.e("Log", "$personObject")
                     }
                 }
             }
             R.id.bt_guest_mode->{
 
-                getIntent().putExtra("user", "guest")
+                getIntent().putExtra("username", "guest")
+                getIntent().putExtra("userid", "guest noID")
+                getIntent().putExtra("user", -1)
+
                 setResult(RESULT_OK, getIntent())
                 finish()
 
@@ -215,10 +232,7 @@ class Initial : AppCompatActivity() , View.OnClickListener{
         else if(requestCode == 4 && resultCode == RESULT_OK){
             userlist_spin()
             username = data?.getStringExtra("user")!!
-/*
-            getIntent().putExtra("user", username)
-            setResult(RESULT_OK, getIntent())
-            finish()*/
+
         }
         else{
             Log.e("check","$requestCode，$resultCode")
@@ -297,8 +311,7 @@ class Initial : AppCompatActivity() , View.OnClickListener{
                 if(BCrypt.checkpw(personObject.getString("password"), resPassword)){
                     Log.e("Login","Right")
                     username = userlist[user]!!
-                    getIntent().putExtra("username", username)
-                    getIntent().putExtra("user", user)
+
                     updateAPI(user)
                 }
                 else Log.e("Login","Error")
@@ -354,7 +367,9 @@ class Initial : AppCompatActivity() , View.OnClickListener{
                 })
                 .setNegativeButton("No", DialogInterface.OnClickListener { dialogInterface, i ->
                     username = userlist[user]!!
+
                     getIntent().putExtra("username", username)
+                    getIntent().putExtra("userid", userid)
                     getIntent().putExtra("user", user)
                     setResult(RESULT_OK, getIntent())
                     finish()
@@ -379,6 +394,7 @@ class Initial : AppCompatActivity() , View.OnClickListener{
         var array = JSONArray(filestring)
         var personObjects=array.getJSONObject(user)
         var get_id = url + "/userid=" + personObjects.getString("_id")
+        userid = personObjects.getString("_id")
         val client = OkHttpClient()
         val request: Request = Request.Builder()
                 .url(get_id)
@@ -402,6 +418,12 @@ class Initial : AppCompatActivity() , View.OnClickListener{
                 array.getJSONObject(user).put("disease",JSONArray(temp.getString("disease")))
                 array.getJSONObject(user).put("license",JSONArray(temp.getString("license")))
                 writeLog(array.toString())
+
+                username = temp.getString("username").toString()
+
+                getIntent().putExtra("username", username)
+                getIntent().putExtra("userid", userid)
+                getIntent().putExtra("user", user)
                 setResult(RESULT_OK, getIntent())
                 finish()
             }

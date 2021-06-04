@@ -298,9 +298,13 @@ class health_panel : AppCompatActivity() {
 
                                         //if(device == null){}
                                         getreconn = false
+                                        var i =0
                                         bluetoothLeScanner!!.startScan(leScanCallback)
+
+                                        //while(getreconn || i<1000){ i +=1}
                                         sleep(2000)
                                         bluetoothLeScanner!!.stopScan(leScanCallback)
+
                                         if(getreconn) {
                                             mgatt = device.connectGatt(this@health_panel, false, gattCB)
                                             sleep(1000)
@@ -616,7 +620,7 @@ class health_panel : AppCompatActivity() {
 
 ///////////////////////////////PreADC
                     //(ecgData[nowIndex3].toLong() and 0xFFL shl 16)
-                    var unsigned_check =  ( (ecgData[nowIndex].toLong() and 0xFFL) or(ecgData[nowIndex2].toLong()and 0xFFL shl 8) or (ecgData[nowIndex3].toLong()and 0xFFL shl 16  ) )
+                    var unsigned_check =  ( (ecgData[nowIndex].toLong() and 0xFFL) or(ecgData[nowIndex2].toLong() and 0xFFL shl 8) or (ecgData[nowIndex3].toLong() and 0xFFL shl 16  ) )
                     ///if(unsigned_check>8388608) unsigned_check -= 16777215
                     //outdata.set(2, unsigned_check)
                     if(BCG_pc<BCG_th ) {
@@ -699,7 +703,7 @@ class health_panel : AppCompatActivity() {
                         res_array.add(outdata[4].toInt())
                         status_array.add(outdata[5].toInt())
 
-                    if(bcg_array.size >=  BCG_SIZE) {
+                    if(bcg_array.size >= BCG_SIZE) {
 
                         /*
                         try {
@@ -932,12 +936,12 @@ class health_panel : AppCompatActivity() {
         when(wavemode){
             0->{
 
-                bt_waveform.text = "心跳波型"
+                bt_waveform.text = "心跳紀錄"
                 wavemode = 1
             }//////////origin wave to heartbeat
             1->{
 
-                bt_waveform.text = "呼吸波型"
+                bt_waveform.text = "呼吸紀錄"
                 wavemode = 2
             }//////////heartbeat wave to hushi
             2->{
