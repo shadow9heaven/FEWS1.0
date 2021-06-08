@@ -12,6 +12,7 @@ import android.content.pm.PackageManager
 import android.media.SoundPool
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Environment
 import android.os.Handler
 import android.util.Log
 import android.view.View
@@ -28,6 +29,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 import okhttp3.internal.notify
+import okhttp3.internal.notifyAll
 import okhttp3.internal.wait
 
 import org.json.JSONArray
@@ -36,6 +38,7 @@ import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.InputStreamReader
+import java.lang.Thread.interrupted
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -46,7 +49,7 @@ import java.lang.Thread.sleep as sleep
 
 class health_panel : AppCompatActivity() {
 
-    val BCG_PACKET_SIZE = 6
+    val BCG_PACKET_SIZE = 10
     val BCG_SIZE = 64 * 60
     val ECG_SIZE = 128 * 60
     val HR_SIZE = 1800
@@ -113,19 +116,24 @@ class health_panel : AppCompatActivity() {
     var ecgObject = JSONObject()
     var jsonreturn = ""
 
+    lateinit var iv_fatigue1 :ImageView
+    lateinit var iv_fatigue2 :ImageView
+    lateinit var iv_fatigue3 :ImageView
+    lateinit var iv_fatigue4 :ImageView
+
     lateinit var ib_vib :ImageButton
+
 
     var vibmode = false
     var viblevel = 0
     lateinit var bt_startdatacollect :Button
-
     lateinit var bt_autoup :Button
     var autoup = false
 
     lateinit var tv_time :TextView
 
     lateinit var device :BluetoothDevice
-    var device_add =""
+    lateinit var device_add :BluetoothDevice
 
     var GV: GraphView? = null
 
@@ -151,6 +159,7 @@ class health_panel : AppCompatActivity() {
     var reconn = 0
     val RECON_DURA = 3
 
+    var hrwriting = false
 
     var recbool = false
 
@@ -193,6 +202,8 @@ class health_panel : AppCompatActivity() {
     val UUID_CHAR_COMMAND = "1234E004-FFFF-1234-FFFF-111122223333"
     val UUID_CHAR_BCG =     "1234E006-FFFF-1234-FFFF-111122223333"
 
+
+
     lateinit var biologue_service: BluetoothGattService
     lateinit var biologue_char_ecg: BluetoothGattCharacteristic
     lateinit var biologue_char_command: BluetoothGattCharacteristic
@@ -204,12 +215,13 @@ class health_panel : AppCompatActivity() {
     private lateinit var DefaultFileName: String
     private lateinit var DefaultBCGName: String
 
+
     var FinalECGname : String = ""
     var FinalBCGname : String = ""
 
     var hrhandle = Handler()
 
-    lateinit var upload_thread : Thread
+    var upload_thread : Thread? = null
 
     private val timerRunnable2: Runnable = object : Runnable {
         override fun run() {
@@ -220,9 +232,13 @@ class health_panel : AppCompatActivity() {
 
                     if (!hrlist.isEmpty()  ) {
                         //if( heartrate_count >MINUTE) {
-                            var finalhr = hrlist.average()
 
+                            //if(hrwriting){ }
+                            hrwriting = true
+                            var finalhr = hrlist.average()
                             hrlist.clear()
+                            hrwriting = false
+
                             if (hrdraw_count < HR_SIZE) hrdraw_count++
                             else {
                                 hr_gv = hr_gv.drop(1)
@@ -274,7 +290,7 @@ class health_panel : AppCompatActivity() {
                         }
                     }/////draw graph
 
-                    if(paklost) {
+                    if(paklost && dataclt) {
                         if (conncount < 5) {
                             Toast.makeText(this@health_panel, conncount.toString() + "packet loss!!", Toast.LENGTH_LONG).show()
 
@@ -292,13 +308,13 @@ class health_panel : AppCompatActivity() {
                                 Thread {
                                     try {
                                         reconn++
-                                        //device = device_add
+                                        device = device_add
                                         //
                                         //device = bluetoothManager.getConnectedDevices(BluetoothProfile.GATT)[0]
 
                                         //if(device == null){}
                                         getreconn = false
-                                        var i =0
+
                                         bluetoothLeScanner!!.startScan(leScanCallback)
 
                                         //while(getreconn || i<1000){ i +=1}
@@ -322,6 +338,7 @@ class health_panel : AppCompatActivity() {
                                     catch(e : Exception){
                                     }
                                     recbool = false
+
                                 }.start()
 
                             }////trying to reconnect
@@ -621,7 +638,7 @@ class health_panel : AppCompatActivity() {
 ///////////////////////////////PreADC
                     //(ecgData[nowIndex3].toLong() and 0xFFL shl 16)
                     var unsigned_check =  ( (ecgData[nowIndex].toLong() and 0xFFL) or(ecgData[nowIndex2].toLong() and 0xFFL shl 8) or (ecgData[nowIndex3].toLong() and 0xFFL shl 16  ) )
-                    ///if(unsigned_check>8388608) unsigned_check -= 16777215
+                    if(unsigned_check>=8388608) unsigned_check -= 16777215
                     //outdata.set(2, unsigned_check)
                     if(BCG_pc<BCG_th ) {
                         BCG_pp += DataPoint((BCG_th - BCG_pc), (unsigned_check).toInt())
@@ -705,17 +722,7 @@ class health_panel : AppCompatActivity() {
 
                     if(bcg_array.size >= BCG_SIZE) {
 
-                        /*
-                        try {
-                            bcg_send.clear()
-                            acx_send.clear()
-                            acy_send.clear()
-                            acz_send.clear()
-                            hr_send.clear()
-                            res_send.clear()
-                        }
-                        catch(e :Exception){}
-                         */
+
                         if(!autoup){
                             bcg_send.clear()
                             acx_send.clear()
@@ -766,7 +773,7 @@ class health_panel : AppCompatActivity() {
                 }///////write bcg parced data
                 if(hrcnt>0){
                     val hrtmp = (hrtotal/hrcnt)
-                    hrlist.add(hrtmp)
+                    if(!hrwriting)hrlist.add(hrtmp)
                 }
                 else {
 
@@ -823,6 +830,23 @@ class health_panel : AppCompatActivity() {
 
                 bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
                 bluetoothAdapter = bluetoothManager?.adapter
+
+
+                device_add = bluetoothManager.getConnectedDevices(GATT)[0]
+
+
+                var blefile = File(storagePath, "blelist.txt")
+                var blebool = false
+
+                try {
+                    blefile?.forEachLine {
+                        if (it == device_add.address) {
+                            blebool = true
+                        }
+                    }
+                }
+                catch (e :Exception){}
+                if(!blebool)blefile?.appendText(device_add.address + "\n")
 
 
                 bt_bluetooth.setImageResource(R.drawable.bt_on)
@@ -885,6 +909,7 @@ class health_panel : AppCompatActivity() {
     fun clickble(view: View) {
         if(!blecnt) {
 
+            broadcastUpdate(ACTION_GATT_DISCONNECTED)
             val intent = Intent(this, bluetooth::class.java)
             startActivityForResult(intent, 1)
 
@@ -968,108 +993,119 @@ class health_panel : AppCompatActivity() {
 
             bt_autoup.text = "關閉數據上傳"
             autoup = true
-            upload_thread = Thread {
+            if(uploadcount == null) {
+                upload_thread = Thread {
 
-                while(autoup){
+                    while (autoup) {
 
-                    if (ecgok && bcgok) {
+                        if (ecgok && bcgok) {
 
 
-                        ecgok = false
-                        bcgok = false
+                            ecgok = false
+                            bcgok = false
 
-                    //uploadcount =0
+                            //uploadcount =0
 
 /////////////////upload data to database
 
 
-                    curr_time = Date().time
-                    //System.currentTimeMillis()
+                            curr_time = Date().time
+                            //System.currentTimeMillis()
 
-                    //confidence_array = confidence_array.drop(16000)
-                    ////////algo
-
-
-                    val ecg_buffer = JSONArray(ecg_send)
-
-                    val bcg_buffer = JSONArray(bcg_send)
-                    val acx_buffer = JSONArray(acx_send)
-                    val acy_buffer = JSONArray(acy_send)
-                    val acz_buffer = JSONArray(acz_send)
-                    val hr_buffer = JSONArray(hr_send)
-                    val res_buffer = JSONArray(res_send)
-                    //val status_buffer = JSONArray(status_send)
+                            //confidence_array = confidence_array.drop(16000)
+                            ////////algo
 
 
-                    algObject.put("timestamp", curr_time)
-                    algObject.put("timestampm", newbts)
-                    algObject.put("fatigue", 1)
-                    algObject.put("hr", hr_buffer)
-                    algObject.put("confidence", 0)
-                    algObject.put("resp", res_buffer)
-                    algObject.put("status", 1)
-                    fetchJSON(algObject)
+                            val ecg_buffer = JSONArray(ecg_send)
 
-                    //synchronized(fetchthread) {
-                    //    fetchthread.wait();
-                    //}
-                    sleep(2000)
-                    val algID = jsonreturn
-
-                    //////ecg
-
-                    ecgObject.put("ecg", ecg_buffer)
-                    ecgObject.put("algoidlist", algID)
-
-                    ecgObject.put("timestampst", newets)
-                    ecgObject.put("timestampend", newets + ECG_SIZE)
-                    ecgObject.put("timestamp", curr_time)
-                    fetchJSON(ecgObject)
+                            val bcg_buffer = JSONArray(bcg_send)
+                            val acx_buffer = JSONArray(acx_send)
+                            val acy_buffer = JSONArray(acy_send)
+                            val acz_buffer = JSONArray(acz_send)
+                            val hr_buffer = JSONArray(hr_send)
+                            val res_buffer = JSONArray(res_send)
+                            //val status_buffer = JSONArray(status_send)
 
 
-                    //synchronized(fetchthread) {
-                    //    fetchthread.wait();
-                    //}
+                            algObject.put("timestamp", curr_time)
+                            algObject.put("timestampm", newbts)
+                            algObject.put("fatigue", 1)
+                            algObject.put("hr", hr_buffer)
+                            algObject.put("confidence", 0)
+                            algObject.put("resp", res_buffer)
+                            algObject.put("status", 1)
+                            fetchJSON(algObject)
 
-                    sleep(2000)
+                            upload_thread?.let {
+                                synchronized(it) {
+                                    upload_thread!!.wait()
+                                }
+                            }
+                           // sleep(2000)
+                            val algID = jsonreturn
 
-                    val ecgID = jsonreturn
+                            //////ecg
 
-                    //////bcg
+                            ecgObject.put("ecg", ecg_buffer)
+                            ecgObject.put("algoidlist", algID)
 
-                    bcgObject.put("bcg", bcg_buffer)
-                    bcgObject.put("accx", acx_buffer)
-                    bcgObject.put("accy", acy_buffer)
-                    bcgObject.put("accz", acz_buffer)
-                    bcgObject.put("ecgidlist", ecgID)
-                    bcgObject.put("algoidlist", algID)
-                    bcgObject.put("timestampst", newbts)
-                    bcgObject.put("timestampend", newbts + BCG_SIZE)
-                    bcgObject.put("timestamp", curr_time)
-
-                    fetchJSON(bcgObject)
-
-                    sleep(2000)
-
-                        ecg_send.clear()
-                        bcg_send.clear()
-                        acx_send.clear()
-                        acy_send.clear()
-                        acz_send.clear()
-                        hr_send.clear()
-                        res_send.clear()
-                        status_send.clear()
+                            ecgObject.put("timestampst", newets)
+                            ecgObject.put("timestampend", newets + ECG_SIZE)
+                            ecgObject.put("timestamp", curr_time)
+                            fetchJSON(ecgObject)
 
 
-                    /////////////////upload data to database
+                            upload_thread?.let {
+                                synchronized(it) {
+                                    upload_thread!!.wait()
+                                }
+                            }
 
+                            //upload_thread.wait()
+                           // sleep(2000)
+                            val ecgID = jsonreturn
+
+                            //////bcg
+
+                            bcgObject.put("bcg", bcg_buffer)
+                            bcgObject.put("accx", acx_buffer)
+                            bcgObject.put("accy", acy_buffer)
+                            bcgObject.put("accz", acz_buffer)
+                            bcgObject.put("ecgidlist", ecgID)
+                            bcgObject.put("algoidlist", algID)
+                            bcgObject.put("timestampst", newbts)
+                            bcgObject.put("timestampend", newbts + BCG_SIZE)
+                            bcgObject.put("timestamp", curr_time)
+
+                            fetchJSON(bcgObject)
+
+                            upload_thread?.let {
+                                synchronized(it) {
+                                    upload_thread!!.wait()
+                                }
+                            }
+                            //sleep(2000)
+
+                            ecg_send.clear()
+                            bcg_send.clear()
+                            acx_send.clear()
+                            acy_send.clear()
+                            acz_send.clear()
+                            hr_send.clear()
+                            res_send.clear()
+                            status_send.clear()
+
+
+                            /////////////////upload data to database
+
+                        }
+                        sleep(500)
                     }
-                    sleep(500)
-                }
-            }//////upload
+                    //upload_thread.interrupt()
+                }//////upload
 
-            upload_thread.start()
-
+                upload_thread?.start()
+            }
         }//////open the upload thread
 
 
@@ -1077,8 +1113,9 @@ class health_panel : AppCompatActivity() {
 
     private val leScanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult?) {
-            if(result!!.device.address == device_add){
+            if(result!!.device == device_add){
                 device = result!!.device
+
                 getreconn = true
 
             }
@@ -1088,78 +1125,81 @@ class health_panel : AppCompatActivity() {
         }
     }
     fun fetchJSON(jsonObject: JSONObject){
-        //fetchthread =  Thread{
+        //fetchthread =
             //synchronized(this) {
-                try {
-                    ///////private String url1 = "http://api.openweathermap.org/data/2.5/weather?q=";
-                    //val url = "http://my-json-feed"
-                    //car_plate = et_input?.text.toString()
-                    //timestamp = "1614787600"
-                    // heart_rate = 85
-                    //var realurl = url + "=" + car_plate
-                    val response = StringBuilder()
+        Thread {
+            try {
+                ///////private String url1 = "http://api.openweathermap.org/data/2.5/weather?q=";
+                //val url = "http://my-json-feed"
+                //car_plate = et_input?.text.toString()
+                //timestamp = "1614787600"
+                // heart_rate = 85
+                //var realurl = url + "=" + car_plate
+                val response = StringBuilder()
 
-                    var realurl = url
+                var realurl = url
 
-                    //Log.e("url", realurl)
-                    //tv_timestamp.text = testurl
-                    var sess = URL(realurl);
-                    var conn = sess.openConnection() as HttpURLConnection;
+                //Log.e("url", realurl)
+                //tv_timestamp.text = testurl
+                var sess = URL(realurl);
+                var conn = sess.openConnection() as HttpURLConnection;
 
-                    conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
-                    conn.setRequestProperty("Accept", "application/json");
-                    conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+                conn.setRequestProperty("Accept", "application/json");
+                conn.setRequestMethod("POST");
 
-                    conn.setConnectTimeout(10000);
-                    conn.setReadTimeout(10000);
-                    conn.setDoInput(true);
-                    conn.setDoOutput(true);
-                    conn.setUseCaches(false);
+                conn.setConnectTimeout(10000);
+                conn.setReadTimeout(10000);
+                conn.setDoInput(true);
+                conn.setDoOutput(true);
+                conn.setUseCaches(false);
 
-                    conn.connect();
+                conn.connect();
 
-                    val os = conn.outputStream
-                    val writer = DataOutputStream(os)
-                    val jsonString: String = jsonObject.toString()
-                    //writer.writeBytes(jsonString)
-                   // Log.e("jsonString", jsonString)
+                val os = conn.outputStream
+                val writer = DataOutputStream(os)
+                val jsonString: String = jsonObject.toString()
+                //writer.writeBytes(jsonString)
+                // Log.e("jsonString", jsonString)
 
-                    writer.writeBytes(jsonString);
+                writer.writeBytes(jsonString);
 
-                    writer.flush()
-                    writer.close()
+                writer.flush()
+                writer.close()
 
-                    val `is` = conn.inputStream
+                val `is` = conn.inputStream
 
-                    val reader = BufferedReader(InputStreamReader(`is`))
+                val reader = BufferedReader(InputStreamReader(`is`))
 
-                    var line: String?
+                var line: String?
 
-                    while (reader.readLine().also { line = it } != null) {
-                        //tmp += line
-                        response.append(line)
-                        response.append('\r')
-                    }
-                    jsonreturn = response.toString()
-                    Log.e("algoID",jsonreturn)
-                    //tv_name.text = response.toString()
-                    reader.close()
-                    //thdone = true
-                    //var reader = conn.getInputStream();
-
-                    //var str_data = convertStreamToString(reader);
-                    //readAndParseJSON(str_data);
-
-                    //stream.close();
-                    os.close()
-
-                } catch (e: Exception) {
-                    e.printStackTrace();
+                while (reader.readLine().also { line = it } != null) {
+                    //tmp += line
+                    response.append(line)
+                    response.append('\r')
                 }
-                //notify()
-            //}
+                jsonreturn = response.toString()
+                Log.e("algoID", jsonreturn)
+                //tv_name.text = response.toString()
+                reader.close()
+                //thdone = true
+                //var reader = conn.getInputStream();
 
-        //}
+                //var str_data = convertStreamToString(reader);
+                //readAndParseJSON(str_data);
+
+                //stream.close();
+                os.close()
+
+            } catch (e: Exception) {
+                e.printStackTrace();
+            }
+            //notify()
+            //}
+            upload_thread!!.notifyAll()
+            //}
+            interrupted()
+        }.start()
        // fetchthread.start()
         //return line
     }
@@ -1184,21 +1224,28 @@ class health_panel : AppCompatActivity() {
         if(!dataclt) {
             Thread {
 
-                device = bluetoothManager.getConnectedDevices(GATT)[0]
-
+                device = device_add
                 //device = bluetoothManager.getConnectedDevices(BluetoothProfile.GATT)[0]
                 mgatt = device.connectGatt(this, false, gattCB)
+
             }.start()
             write_new_file()
             dataclt = true
             bt_startdatacollect.text = "停止收集"
         }
-        else{
-            if (mgatt?.device != null) mgatt?.disconnect()
+        else {
+            if (mgatt?.device != null){
+                mgatt?.disconnect()
+
+                mgatt?.close()
+                mgatt = null
+        }
             dataclt = false
             bt_startdatacollect.text = "收集資料"
+
         }
     }
+
     fun clickwaveset(view: View) {
 
     }

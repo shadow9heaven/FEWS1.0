@@ -21,6 +21,7 @@ class MainActivity : AppCompatActivity() {
 
     var online = true
 
+    var BLEname = "ble_list.txt"
     var userName = "guest"
     var userID = "hametorigun"
     var carid = "car"
@@ -119,7 +120,11 @@ class MainActivity : AppCompatActivity() {
                     userID = data?.getStringExtra("userid")!!
                     user = data?.getIntExtra("user",-1)!!
                     Toast.makeText(this, "user:" + userName + "ID:" + userID , Toast.LENGTH_LONG).show()
+                //////////////////firmware update check
 
+
+
+                //////////////////firmware update check
                 } else {
                     finish()
                 }
