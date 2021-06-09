@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.SystemClock.sleep
 import android.util.Log
+import android.view.MotionEvent
 import android.view.View
 import android.widget.ListView
 import android.widget.SimpleAdapter
@@ -25,6 +26,7 @@ import com.ble.drive_status_cntl.bluetooth as bluetooth
 
 class bluetooth : AppCompatActivity() {
     var device_connect = false
+    var refreshing= false
 
     val SERVICE_UUID_UART = "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
     val CHARACTERISTIC_UUID_UART_TX = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E" //TX
@@ -67,8 +69,31 @@ class bluetooth : AppCompatActivity() {
     val ACTION_DATA_AVAILABLE = "com.example.bluetooth.le.ACTION_DATA_AVAILABLE"
     val EXTRA_DATA = "com.example.bluetooth.le.EXTRA_DATA"
 
+    /*
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+       //if (isScrollToTop()) {
+
+            //Log.e("RefreshRecyclerView", "ScrollToTop")
+            when (ev.action) {
+
+                MotionEvent.ACTION_DOWN -> {
 
 
+                }
+
+                MotionEvent.ACTION_MOVE -> {
+
+                }
+
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                }
+
+            }
+                    //}
+
+        return super.dispatchTouchEvent(ev)
+    }
+*/
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_bluetooth)
@@ -139,7 +164,11 @@ class bluetooth : AppCompatActivity() {
 
     private val leScanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult?) {
-            BLE_DeviceList.put(result!!.device.toString(), result)
+
+            if(result!!.device.name != null) {
+                BLE_DeviceList.put(result!!.device.toString(), result)
+            }
+
         }
         override fun onScanFailed(errorCode: Int) {
             Log.e("Scan Failed", "Error Code: $errorCode")

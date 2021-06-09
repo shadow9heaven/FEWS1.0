@@ -10,4 +10,17 @@
     <color name="gray">#a6a2a2</color>
     <color name="alert_red">#C21010</color>
     <color name="sky_blue">#2010C2</color>
+
+    <color name="colorText_Blue">#303f9f</color>
+
+    <color name="light_gray">#555555</color>
+    <color name="darker_gray">#868686</color>
+
+    <color name="color_red">#F11E0E</color>
+    <color name="color_green">#44D14A</color>
+
+    <color name="color_temp_low">#638DFA</color>
+    <color name="color_temp_medium">#44D14A</color>
+    <color name="color_temp_high">#F11E0E</color>
+
 </resources>

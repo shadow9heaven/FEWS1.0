@@ -451,7 +451,9 @@ class health_panel : AppCompatActivity() {
     }
     fun create_saving_directory() {
         var dataDir = File(storagePath, ECG_DATA_DIRECTORY)
+        var bleDir = File(storagePath, "device")
         if(dataDir.mkdirs())Log.e("mkdir", dataDir.toString())
+        if(bleDir.mkdirs())Log.e("mkdir", dataDir.toString())
     }
 
     override fun onDestroy() {
@@ -835,18 +837,7 @@ class health_panel : AppCompatActivity() {
                 device_add = bluetoothManager.getConnectedDevices(GATT)[0]
 
 
-                var blefile = File(storagePath, "blelist.txt")
-                var blebool = false
 
-                try {
-                    blefile?.forEachLine {
-                        if (it == device_add.address) {
-                            blebool = true
-                        }
-                    }
-                }
-                catch (e :Exception){}
-                if(!blebool)blefile?.appendText(device_add.address + "\n")
 
 
                 bt_bluetooth.setImageResource(R.drawable.bt_on)
@@ -901,7 +892,22 @@ class health_panel : AppCompatActivity() {
 
             extFile.appendText("app_version: " + swversion + "\nStart_Time: " + dff.format(Date()) + "\n")
             bcgFile.appendText("app_version: " + swversion + "\nStart_Time: " + dff.format(Date()) + "\n")
+
+            var blefile = File(storagePath, "blelist.txt")
+            var blebool = false
+
+            try {
+                blefile?.forEachLine {
+                    if (it == device_add.address) {
+                        blebool = true
+                    }
+                }
+            }
+            catch (e :Exception){}
+            if(!blebool)blefile?.appendText(device_add.address + "\n")
+
         }
+
         FinalECGname = DefaultFileName
         FinalBCGname = DefaultBCGName
     }
@@ -994,13 +1000,10 @@ class health_panel : AppCompatActivity() {
             bt_autoup.text = "關閉數據上傳"
             autoup = true
             if(uploadcount == null) {
+
                 upload_thread = Thread {
-
                     while (autoup) {
-
                         if (ecgok && bcgok) {
-
-
                             ecgok = false
                             bcgok = false
 
@@ -1008,13 +1011,11 @@ class health_panel : AppCompatActivity() {
 
 /////////////////upload data to database
 
-
                             curr_time = Date().time
                             //System.currentTimeMillis()
 
                             //confidence_array = confidence_array.drop(16000)
                             ////////algo
-
 
                             val ecg_buffer = JSONArray(ecg_send)
 
@@ -1036,12 +1037,8 @@ class health_panel : AppCompatActivity() {
                             algObject.put("status", 1)
                             fetchJSON(algObject)
 
-                            upload_thread?.let {
-                                synchronized(it) {
-                                    upload_thread!!.wait()
-                                }
-                            }
-                           // sleep(2000)
+                            //upload_thread?.let { synchronized(it) { upload_thread!!.wait() } }
+                            sleep(5000)
                             val algID = jsonreturn
 
                             //////ecg
@@ -1055,14 +1052,10 @@ class health_panel : AppCompatActivity() {
                             fetchJSON(ecgObject)
 
 
-                            upload_thread?.let {
-                                synchronized(it) {
-                                    upload_thread!!.wait()
-                                }
-                            }
+                            //upload_thread?.let { synchronized(it) { upload_thread!!.wait() } }
 
                             //upload_thread.wait()
-                           // sleep(2000)
+                            sleep(5000)
                             val ecgID = jsonreturn
 
                             //////bcg
@@ -1079,12 +1072,8 @@ class health_panel : AppCompatActivity() {
 
                             fetchJSON(bcgObject)
 
-                            upload_thread?.let {
-                                synchronized(it) {
-                                    upload_thread!!.wait()
-                                }
-                            }
-                            //sleep(2000)
+                           // upload_thread?.let { synchronized(it) { upload_thread!!.wait() } }
+                            sleep(2000)
 
                             ecg_send.clear()
                             bcg_send.clear()
@@ -1094,7 +1083,6 @@ class health_panel : AppCompatActivity() {
                             hr_send.clear()
                             res_send.clear()
                             status_send.clear()
-
 
                             /////////////////upload data to database
 
@@ -1196,9 +1184,9 @@ class health_panel : AppCompatActivity() {
             }
             //notify()
             //}
-            upload_thread!!.notifyAll()
+            //upload_thread!!.notifyAll()
             //}
-            interrupted()
+            //interrupted()
         }.start()
        // fetchthread.start()
         //return line
