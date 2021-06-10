@@ -29,13 +29,6 @@ class changeuser : AppCompatActivity() {
 
     var testuserjson1 =  arrayListOf<String>()
 
-/*
-    val testuserjson1 = arrayListOf( "{\"name\":\"jojo\" ,\"email\" :\"dreamfly878787\" , \"password\" : \" qazwsx\" } "
-    , "{\"name\":\"kakyoin\" ,\"email\" :\"hirophant87\" , \"password\" : \" qazwsx\" } "
-    ,"{\"name\":\"abuderu \" ,\"email\" :\"magicianred\" , \"password\" : \" qazwsx\" } "
-    , "{\"name\":\"borunarefu\" ,\"email\" :\"silverchariot\" , \"password\" : \" qazwsx\" } "
-    , "{\"name\":\"jojo\" ,\"email\" :\"hermitpurple\" , \"password\" : \" qazwsx\" } ")
-*/
 
     var userList = HashMap<String, String>()
     //lateinit var userjson :JSONArray
@@ -54,16 +47,7 @@ class changeuser : AppCompatActivity() {
         var filestring = userfile.readText(Charsets.UTF_8)
 
 
-        /*
-        try {
-            //user_text = userfile.readText(Charsets.UTF_8)
-            //Log.e("cmd_text", user_text)
-            //var cmdlist = user_text.split("\n")
-            //for(a in cmdlist)Log.e("cmd",a)
-            //run_macro(cmdlist, view)
-        } catch (e: java.lang.Exception) {
-        }
-        */
+
 
 
         val array = JSONArray(filestring)

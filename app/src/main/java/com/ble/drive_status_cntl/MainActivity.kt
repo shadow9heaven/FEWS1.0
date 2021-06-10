@@ -226,4 +226,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun clickota(view: View) {
+        val intent = Intent(this, OTA::class.java)
+        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        startActivityForResult(intent, 70)
+
+    }
+
 }

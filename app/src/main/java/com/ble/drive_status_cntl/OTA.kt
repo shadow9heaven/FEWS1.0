@@ -6,12 +6,14 @@ import android.os.Bundle
 import android.os.Handler
 import android.util.Log
 import android.view.View
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.example.kotlin_ota.BLEManager
+import com.example.kotlin_ota.global
 import java.io.FileInputStream
 import java.lang.String
 import java.util.*
@@ -130,6 +132,35 @@ class OTA : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_ota)
 
+        B_Disconnect = findViewById(R.id.B_Disconnect)
+        B_Upgrade = findViewById(R.id.B_upgrade_cmd)
+        B_Loadfile = findViewById(R.id.B_loadfile)
+        B_Start_cmd = findViewById(R.id.B_start_cmd)
+
+        TV_path = findViewById(R.id.TV_path)
+        pg_bar = findViewById(R.id.progressBar3)
+        pg_tv = findViewById(R.id.progress_text)
+
+        pg_bar4 = findViewById(R.id.progressBar4)
+        pg_tv4 = findViewById(R.id.progress4_text)
+
+        global.instance.init(this)
+        val ota_device_name = "SMART_SEAT1.3"
+        BLEM = global.instance.BLEMan!!
+
+        if (!BLEM.isBluetoothEnabled()) {
+            global.DisplayToast("Bluetooth disabled")
+        } else {
+            BLEM.Connect(this, ota_device_name)
+        }
+
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        //Start UI Update Timer
+        //Start UI Update Timer
+        timerHandler!!.postDelayed(timerRunnable, 0)
+        pg_bar.progress = progress_count
+        pg_bar4.progress = 0
+        B_Upgrade.isEnabled = false
     }
 
     fun B_Disconnect_onClick(v: View?) {

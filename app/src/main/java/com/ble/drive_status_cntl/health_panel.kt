@@ -66,13 +66,10 @@ class health_panel : AppCompatActivity() {
 
     var getreconn = false
 
-
     var newets = -1
     var ets = -1
     var newbts = -1
     var bts = -1
-    //var bts_array : List<Int> = ArrayList()
-
 
     var ecg_array : ArrayList<Int> = ArrayList()
     var bcg_array : ArrayList<Int> = ArrayList()
@@ -83,7 +80,6 @@ class health_panel : AppCompatActivity() {
     var res_array : ArrayList<Int> = ArrayList()
     var status_array : ArrayList<Int> = ArrayList()
     var confidence_array : ArrayList<Int> = ArrayList()
-
 /*
     lateinit var ecg_send : ArrayList<Int>
     lateinit var bcg_send : ArrayList<Int>
@@ -95,7 +91,6 @@ class health_panel : AppCompatActivity() {
     lateinit var status_send : ArrayList<Int>
     lateinit var confidence_send : ArrayList<Int>
 */
-
     var ecg_send : ArrayList<Int> = ArrayList()
     var bcg_send : ArrayList<Int> = ArrayList()
     var acx_send : ArrayList<Int> = ArrayList()
@@ -133,7 +128,7 @@ class health_panel : AppCompatActivity() {
     lateinit var tv_time :TextView
 
     lateinit var device :BluetoothDevice
-    lateinit var device_add :BluetoothDevice
+    var device_add = ""
 
     var GV: GraphView? = null
 
@@ -150,7 +145,6 @@ class health_panel : AppCompatActivity() {
     var ftg_gv : List<DataPoint> = ArrayList()
 
     var hrdraw_count = 1
-    //var draw_mode  = 0
 
     var wavemode   = 0
 
@@ -231,9 +225,6 @@ class health_panel : AppCompatActivity() {
 
 
                     if (!hrlist.isEmpty()  ) {
-                        //if( heartrate_count >MINUTE) {
-
-                            //if(hrwriting){ }
                             hrwriting = true
                             var finalhr = hrlist.average()
                             hrlist.clear()
@@ -293,26 +284,22 @@ class health_panel : AppCompatActivity() {
                     if(paklost && dataclt) {
                         if (conncount < 5) {
                             Toast.makeText(this@health_panel, conncount.toString() + "packet loss!!", Toast.LENGTH_LONG).show()
-
                             conncount++
                         } else {
-
                             //var reconn = 0
                             //val RECON_DURA
-
                             if(reconn < RECON_DURA && !recbool){
-
                                 Toast.makeText(this@health_panel, reconn.toString() + "connection retry!!", Toast.LENGTH_LONG).show()
 
                                 recbool = true
                                 Thread {
                                     try {
                                         reconn++
-                                        device = device_add
-                                        //
+                                        //device = device_add
                                         //device = bluetoothManager.getConnectedDevices(BluetoothProfile.GATT)[0]
 
                                         //if(device == null){}
+
                                         getreconn = false
 
                                         bluetoothLeScanner!!.startScan(leScanCallback)
@@ -834,7 +821,7 @@ class health_panel : AppCompatActivity() {
                 bluetoothAdapter = bluetoothManager?.adapter
 
 
-                device_add = bluetoothManager.getConnectedDevices(GATT)[0]
+                device_add = bluetoothManager.getConnectedDevices(GATT)[0].address
 
 
 
@@ -898,13 +885,13 @@ class health_panel : AppCompatActivity() {
 
             try {
                 blefile?.forEachLine {
-                    if (it == device_add.address) {
+                    if (it == device_add) {
                         blebool = true
                     }
                 }
             }
             catch (e :Exception){}
-            if(!blebool)blefile?.appendText(device_add.address + "\n")
+            if(!blebool)blefile?.appendText(device_add + "\n")
 
         }
 
@@ -1101,7 +1088,7 @@ class health_panel : AppCompatActivity() {
 
     private val leScanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult?) {
-            if(result!!.device == device_add){
+            if(result!!.device.address == device_add){
                 device = result!!.device
 
                 getreconn = true
@@ -1212,7 +1199,7 @@ class health_panel : AppCompatActivity() {
         if(!dataclt) {
             Thread {
 
-                device = device_add
+                device_add
                 //device = bluetoothManager.getConnectedDevices(BluetoothProfile.GATT)[0]
                 mgatt = device.connectGatt(this, false, gattCB)
 
