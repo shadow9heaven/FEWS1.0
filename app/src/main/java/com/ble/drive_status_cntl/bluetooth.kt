@@ -21,6 +21,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import java.util.*
 import com.ble.drive_status_cntl.bluetooth as bluetooth
 
@@ -94,6 +95,8 @@ class bluetooth : AppCompatActivity() {
         return super.dispatchTouchEvent(ev)
     }
 */
+    lateinit var swipe : SwipeRefreshLayout
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -129,6 +132,8 @@ class bluetooth : AppCompatActivity() {
 
         listView = findViewById<ListView>(R.id.BTHlist);
         tx_srh = findViewById(R.id.searchtext);
+        swipe = findViewById(R.id.swiperefresh)
+
 
         Log.e("GATT", bluetoothManager.getConnectedDevices(GATT).toString())
 
@@ -160,6 +165,17 @@ class bluetooth : AppCompatActivity() {
         listView.setOnItemClickListener{ parent, view, position, id ->
             clickConn(this, position)
         }
+        val listener = object: SwipeRefreshLayout.OnRefreshListener {
+            override fun onRefresh(){
+                clickUpdate(listView)
+
+                adapter?.notifyDataSetChanged()
+                    //讓 RecyclerView 的 Adapter 更新畫面
+                swipe.isRefreshing = false
+            }
+        }
+
+        swipe.setOnRefreshListener(listener)
 
     }
 
